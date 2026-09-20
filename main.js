@@ -21,7 +21,7 @@ import {
   getKirakiraImage,
   getRadarStats,
 } from './game/units.js';
-import { createBattle } from './game/battle.js';
+import { createBattle, createPvpBattle } from './game/battle.js';
 import { LAYER_IDS, LAYER_INFO } from './game/layers.js';
 import { DIFFICULTY_LEVELS, getDifficultySettings } from './game/difficulty.js';
 import {
@@ -66,11 +66,17 @@ const appState = {
   loop: null,
   lastResult: null,
   speed: 1,
+  // 対戦モード（同一端末でのプレイヤーvsプレイヤー）用の状態。進行度・セーブデータには影響しない
+  pvpBattle: null,
+  pvpLoop: null,
+  pvpSpeed: 1,
 };
 
 const laneUnitNodes = new Map();
 const lastAttackFlash = new Map();
 const lastCastleFlash = new Map();
+const pvpLaneUnitNodes = new Map();
+const pvpLastAttackFlash = new Map();
 
 // ---------- セーブデータ（複数プロフィール対応・localStorage永続化） ----------
 // 1台の端末を複数人で共有する想定のため、プロフィール（なまえ）ごとに進捗を分けて保存し、
@@ -1286,6 +1292,231 @@ function handleBattleResult(result, stage, difficulty) {
   }, 1400);
 }
 
+// ---------- 対戦モード（同一端末でのプレイヤーvsプレイヤー） ----------
+
+function loadRawProfileData(id) {
+  const raw = safeGetItem(saveDataKey(id));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function renderVsSelect() {
+  const profiles = listProfiles().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const p1Select = document.getElementById('vs-select-p1');
+  const p2Select = document.getElementById('vs-select-p2');
+  const hint = document.getElementById('vs-select-hint');
+  const startBtn = document.getElementById('btn-vs-start');
+
+  const optionsHtml = profiles.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
+  const prevP1 = p1Select.value;
+  const prevP2 = p2Select.value;
+  p1Select.innerHTML = optionsHtml;
+  p2Select.innerHTML = optionsHtml;
+  if (profiles.some((p) => p.id === prevP1)) p1Select.value = prevP1;
+  if (profiles.some((p) => p.id === prevP2)) p2Select.value = prevP2;
+  if (!p1Select.value && profiles[0]) p1Select.value = profiles[0].id;
+  if (!p2Select.value && profiles[1]) p2Select.value = profiles[1].id;
+
+  const updateValidity = () => {
+    const sameSelection = p1Select.value && p1Select.value === p2Select.value;
+    if (profiles.length < 2) {
+      hint.hidden = false;
+      hint.textContent = '対戦するには、セーブデータが2つ以上必要です。「セーブデータ選択」画面で新規作成するか、他端末から引き継いでください。';
+      startBtn.disabled = true;
+    } else if (sameSelection) {
+      hint.hidden = false;
+      hint.textContent = '同じセーブデータ同士では対戦できません。プレイヤー1とプレイヤー2で別のセーブデータを選んでください。';
+      startBtn.disabled = true;
+    } else {
+      hint.hidden = true;
+      startBtn.disabled = false;
+    }
+  };
+  p1Select.onchange = updateValidity;
+  p2Select.onchange = updateValidity;
+  updateValidity();
+}
+
+function buildPvpLaneRows() {
+  const container = document.getElementById('vs-lane-rows');
+  if (!container) return;
+  container.innerHTML = '';
+  for (const layerId of LAYER_IDS) {
+    const info = LAYER_INFO[layerId];
+    const row = document.createElement('div');
+    row.className = `lane-row lane-row--${layerId}`;
+    row.style.top = `${info.order * 25}%`;
+    row.innerHTML = `<span class="lane-row-label">${info.label}</span>`;
+    container.appendChild(row);
+  }
+}
+
+function buildPvpDeployRow(side, formation, levels) {
+  const row = document.getElementById(side === 'p1' ? 'vs-p1-deploy-row' : 'vs-p2-deploy-row');
+  row.innerHTML = '';
+  for (const defId of formation) {
+    const def = getUnitDef(defId);
+    if (!def) continue;
+    const level = levels[defId] || 1;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `deploy-btn layer-${def.layer}`;
+    btn.dataset.defId = defId;
+    btn.dataset.pvpSide = side;
+    btn.innerHTML = `
+      <span class="deploy-cd" data-role="cd"></span>
+      <span class="deploy-layer">${LAYER_INFO[def.layer].label}</span>
+      <span class="deploy-icon">
+        <img src="${getBattleImage(defId)}" alt="">
+        ${getFormBadge(level) ? `<span class="deploy-form-badge">${getFormBadge(level)}</span>` : ''}
+      </span>
+      <span class="deploy-cost">${def.cost}</span>
+    `;
+    btn.addEventListener('click', () => {
+      appState.pvpBattle.deploy(side, defId);
+    });
+    row.appendChild(btn);
+  }
+}
+
+function startPvpBattle() {
+  const p1Id = document.getElementById('vs-select-p1').value;
+  const p2Id = document.getElementById('vs-select-p2').value;
+  if (!p1Id || !p2Id || p1Id === p2Id) return;
+
+  const profiles = listProfiles();
+  const p1Profile = profiles.find((p) => p.id === p1Id);
+  const p2Profile = profiles.find((p) => p.id === p2Id);
+  const p1Data = loadRawProfileData(p1Id);
+  const p2Data = loadRawProfileData(p2Id);
+  if (!p1Profile || !p2Profile || !p1Data || !p2Data) return;
+
+  const p1 = { name: p1Profile.name, formation: p1Data.formation || [], levels: p1Data.unitLevels || {} };
+  const p2 = { name: p2Profile.name, formation: p2Data.formation || [], levels: p2Data.unitLevels || {} };
+
+  appState.pvpBattle = createPvpBattle(p1, p2);
+  appState.pvpSpeed = 1;
+  document.getElementById('vs-btn-speed').textContent = 'x1';
+  appState._pvpResultHandled = false;
+
+  document.getElementById('vs-lane-units').innerHTML = '';
+  pvpLaneUnitNodes.clear();
+  pvpLastAttackFlash.clear();
+  const overlay = document.getElementById('vs-result-overlay');
+  overlay.hidden = true;
+
+  document.getElementById('vs-p1-name').textContent = p1.name;
+  document.getElementById('vs-p2-name').textContent = p2.name;
+
+  buildPvpLaneRows();
+  buildPvpDeployRow('p1', p1.formation, p1.levels);
+  buildPvpDeployRow('p2', p2.formation, p2.levels);
+  playBattleMusic(false);
+  updateMuteButton();
+
+  if (appState.pvpLoop) appState.pvpLoop.stop();
+  appState.pvpLoop = createLoop({
+    update: (dt) => appState.pvpBattle.update(dt),
+    render: renderPvpBattleFrame,
+  });
+  appState.pvpLoop.start();
+
+  showScreen('battle-vs');
+}
+
+function pvpLayerTopPercent(unit) {
+  const band = LAYER_INFO[unit.layer].order * 25;
+  return band + (unit.owner === 'p1' ? 25 * 0.68 : 25 * 0.3);
+}
+
+function syncPvpUnitNode(unit, laneLength) {
+  let node = pvpLaneUnitNodes.get(unit.uid);
+  if (!node) {
+    node = document.createElement('div');
+    node.className = `lane-unit lane-unit--${unit.owner === 'p1' ? 'ally' : 'enemy'}`;
+    node.innerHTML = `
+      <div class="lane-unit-hp"><div class="lane-unit-hp-fill"></div></div>
+      <div class="lane-unit-icon"><img class="icon-glyph" src="${getBattleImage(unit.defId)}" alt=""></div>
+    `;
+    document.getElementById('vs-lane-units').appendChild(node);
+    pvpLaneUnitNodes.set(unit.uid, node);
+  }
+  const pct = 100 - (unit.x / laneLength) * 100;
+  node.style.left = `${pct}%`;
+  node.style.top = `${pvpLayerTopPercent(unit)}%`;
+  node.classList.toggle('is-form1', unit.form === 1);
+  node.classList.toggle('is-form2', unit.form === 2);
+  const now = appState.pvpBattle ? appState.pvpBattle.getRenderState().time : 0;
+  node.classList.toggle('is-attacking', now < unit.attackFlashUntil);
+  node.classList.toggle('is-knockback', now < unit.knockbackUntil);
+  node.classList.toggle('is-moving', !unit.engaged && now >= unit.attackFlashUntil);
+  const fill = node.querySelector('.lane-unit-hp-fill');
+  fill.style.width = `${Math.max(0, (unit.hp / unit.maxHp) * 100)}%`;
+
+  if (unit.attackFlashUntil > 0 && pvpLastAttackFlash.get(unit.uid) !== unit.attackFlashUntil) {
+    pvpLastAttackFlash.set(unit.uid, unit.attackFlashUntil);
+    playHitSfx();
+  }
+}
+
+function updatePvpDeployButtons(side, deployButtons) {
+  for (const info of deployButtons) {
+    const btn = document.querySelector(`.deploy-btn[data-pvp-side="${side}"][data-def-id="${info.defId}"]`);
+    if (!btn) continue;
+    const onCooldown = info.cooldownRemaining > 0;
+    btn.disabled = onCooldown || !info.affordable;
+    btn.classList.toggle('is-cooldown', onCooldown);
+    const cdEl = btn.querySelector('[data-role="cd"]');
+    cdEl.style.height = onCooldown ? `${info.cooldownRatio * 100}%` : '0%';
+  }
+}
+
+function renderPvpBattleFrame() {
+  const rs = appState.pvpBattle.getRenderState();
+
+  document.getElementById('vs-p1-hp-fill').style.width = `${Math.max(0, (rs.p1.hp / rs.p1.maxHp) * 100)}%`;
+  document.getElementById('vs-p2-hp-fill').style.width = `${Math.max(0, (rs.p2.hp / rs.p2.maxHp) * 100)}%`;
+  document.getElementById('vs-battle-timer').textContent = formatTime(rs.time);
+  document.getElementById('vs-p1-coin').textContent = rs.p1.coin;
+  document.getElementById('vs-p2-coin').textContent = rs.p2.coin;
+
+  const activeUids = new Set();
+  for (const unit of [...rs.p1.units, ...rs.p2.units]) {
+    activeUids.add(unit.uid);
+    syncPvpUnitNode(unit, rs.laneLength);
+  }
+  for (const [uid, node] of pvpLaneUnitNodes) {
+    if (!activeUids.has(uid)) {
+      node.remove();
+      pvpLaneUnitNodes.delete(uid);
+      pvpLastAttackFlash.delete(uid);
+    }
+  }
+
+  updatePvpDeployButtons('p1', rs.p1.deployButtons);
+  updatePvpDeployButtons('p2', rs.p2.deployButtons);
+
+  if (rs.result && !appState._pvpResultHandled) {
+    appState._pvpResultHandled = true;
+    appState.pvpLoop.stop();
+    stopMusic();
+    handlePvpBattleResult(rs.result, rs.p1.name, rs.p2.name);
+  }
+}
+
+function handlePvpBattleResult(result, p1Name, p2Name) {
+  const overlay = document.getElementById('vs-result-overlay');
+  const title = document.getElementById('vs-result-title');
+  const winnerName = result === 'p1' ? p1Name : p2Name;
+  title.textContent = `${winnerName} の勝利！`;
+  overlay.hidden = false;
+  playResultSfx(true);
+}
+
 // ---------- リザルト ----------
 
 // エクストラステージは章の連番とは別枠の解放条件を持つため「次のステージ」を持たない
@@ -1407,9 +1638,26 @@ app.addEventListener('click', (e) => {
     showScreen('formation');
   } else if (action === 'go-home') {
     if (appState.loop) appState.loop.stop();
+    if (appState.pvpLoop) appState.pvpLoop.stop();
     renderHome();
     showScreen('home');
     playPrepMusic();
+  } else if (action === 'go-vs-select') {
+    if (appState.loop) appState.loop.stop();
+    if (appState.pvpLoop) appState.pvpLoop.stop();
+    renderVsSelect();
+    showScreen('vs-select');
+    playPrepMusic();
+  } else if (action === 'start-pvp-battle') {
+    if (target.disabled) return;
+    startPvpBattle();
+  } else if (action === 'retry-pvp-battle') {
+    startPvpBattle();
+  } else if (action === 'toggle-vs-speed') {
+    const idx = SPEED_STEPS.indexOf(appState.pvpSpeed);
+    appState.pvpSpeed = SPEED_STEPS[(idx + 1) % SPEED_STEPS.length];
+    appState.pvpLoop.setSpeed(appState.pvpSpeed);
+    target.textContent = `x${appState.pvpSpeed}`;
   } else if (action === 'go-gacha') {
     renderGacha();
     showScreen('gacha');

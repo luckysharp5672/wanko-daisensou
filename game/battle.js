@@ -6,6 +6,8 @@ import { getStage } from './stages.js';
 import { getUnitDef, spawnAlly, CASTLE_WEAPONS } from './units.js';
 import { getEnemyDef, spawnEnemy } from './enemies.js';
 import { getDifficultySettings } from './difficulty.js';
+import { LAYER_IDS } from './layers.js';
+import { PVP_SETTINGS } from './pvp.js';
 
 const KNOCKBACK_PX = 24;
 const ALLY_SPAWN_X = 24;
@@ -259,4 +261,133 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
   }
 
   return { update, deploy, deployCastleWeapon, getRenderState };
+}
+
+// ---------- 対戦モード（同一デバイスでのプレイヤーvsプレイヤー） ----------
+// 既存の stepUnits() は陣営A/陣営Bの対称なロジックなので変更せずそのまま再利用する。
+// p1/p2 はそれぞれ { name, formation, levels } の形。両陣営ともにキャラの出撃（コイン消費）のみで、
+// 敵ウェーブ・自城の武器・難易度は対戦モードでは扱わない。
+
+function makePvpSide(player) {
+  return {
+    name: player.name,
+    formation: player.formation.filter((id) => getUnitDef(id)),
+    levels: player.levels || {},
+    coin: PVP_SETTINGS.initialCoin,
+    maxCoin: PVP_SETTINGS.maxCoin,
+    coinRegen: PVP_SETTINGS.coinRegen,
+    cooldowns: {},
+    units: [],
+  };
+}
+
+export function createPvpBattle(p1, p2) {
+  const state = {
+    laneLength: PVP_SETTINGS.laneLength,
+    time: 0,
+    p1Hp: PVP_SETTINGS.castleHp,
+    p1MaxHp: PVP_SETTINGS.castleHp,
+    p2Hp: PVP_SETTINGS.castleHp,
+    p2MaxHp: PVP_SETTINGS.castleHp,
+    p1: makePvpSide(p1),
+    p2: makePvpSide(p2),
+    result: null, // null | 'p1' | 'p2'
+  };
+
+  // 対戦相手のキャラを倒すとコインが少し戻る（キャラのコストの1/3、最低1）
+  function onKilled(killerSide) {
+    return (killed) => {
+      const def = getUnitDef(killed.defId);
+      const reward = def ? Math.max(1, Math.round(def.cost / 3)) : 0;
+      killerSide.coin = Math.min(killerSide.maxCoin, killerSide.coin + reward);
+    };
+  }
+
+  function update(dt) {
+    if (state.result) return;
+    state.time += dt;
+
+    state.p1.coin = Math.min(state.p1.maxCoin, state.p1.coin + (state.p1.coinRegen * dt) / 1000);
+    state.p2.coin = Math.min(state.p2.maxCoin, state.p2.coin + (state.p2.coinRegen * dt) / 1000);
+
+    for (const layer of LAYER_IDS) {
+      const p1Layer = state.p1.units.filter((u) => u.layer === layer);
+      const p2Layer = state.p2.units.filter((u) => u.layer === layer);
+      stepUnits(state, p1Layer, state.p2.units, dt, 1, 'p2Hp', onKilled(state.p1));
+      stepUnits(state, p2Layer, state.p1.units, dt, -1, 'p1Hp', onKilled(state.p2));
+    }
+
+    state.p1.units = state.p1.units.filter((u) => !u.dead);
+    state.p2.units = state.p2.units.filter((u) => !u.dead);
+
+    if (state.p2Hp <= 0) {
+      state.p2Hp = 0;
+      state.result = 'p1';
+    } else if (state.p1Hp <= 0) {
+      state.p1Hp = 0;
+      state.result = 'p2';
+    }
+  }
+
+  function deploy(side, defId) {
+    if (state.result) return false;
+    const player = side === 'p1' ? state.p1 : state.p2;
+    const def = getUnitDef(defId);
+    if (!def) return false;
+    if (!player.formation.includes(defId)) return false;
+    const availableAt = player.cooldowns[defId] || 0;
+    if (state.time < availableAt) return false;
+    if (player.coin < def.cost) return false;
+
+    player.coin -= def.cost;
+    player.cooldowns[defId] = state.time + def.recast;
+    const spawnX = side === 'p1' ? ALLY_SPAWN_X : state.laneLength - ALLY_SPAWN_X;
+    const unit = spawnAlly(defId, spawnX, player.levels[defId] || 1);
+    unit.owner = side;
+    player.units.push(unit);
+    return true;
+  }
+
+  function buildDeployButtons(player) {
+    return player.formation.map((defId) => {
+      const def = getUnitDef(defId);
+      const availableAt = player.cooldowns[defId] || 0;
+      const cooldownRemaining = Math.max(0, availableAt - state.time);
+      return {
+        defId,
+        def,
+        cooldownRemaining,
+        cooldownRatio: cooldownRemaining > 0 ? cooldownRemaining / def.recast : 0,
+        affordable: player.coin >= def.cost,
+      };
+    });
+  }
+
+  function getRenderState() {
+    return {
+      time: state.time,
+      laneLength: state.laneLength,
+      result: state.result,
+      p1: {
+        name: state.p1.name,
+        coin: Math.floor(state.p1.coin),
+        maxCoin: state.p1.maxCoin,
+        hp: state.p1Hp,
+        maxHp: state.p1MaxHp,
+        units: state.p1.units.map((u) => ({ ...u })),
+        deployButtons: buildDeployButtons(state.p1),
+      },
+      p2: {
+        name: state.p2.name,
+        coin: Math.floor(state.p2.coin),
+        maxCoin: state.p2.maxCoin,
+        hp: state.p2Hp,
+        maxHp: state.p2MaxHp,
+        units: state.p2.units.map((u) => ({ ...u })),
+        deployButtons: buildDeployButtons(state.p2),
+      },
+    };
+  }
+
+  return { update, deploy, getRenderState };
 }

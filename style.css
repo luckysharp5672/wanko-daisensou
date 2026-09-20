@@ -1375,7 +1375,8 @@ button {
 
 /* ---------- バトル ---------- */
 
-.screen[data-screen='battle'] {
+.screen[data-screen='battle'],
+.screen[data-screen='battle-vs'] {
   position: relative;
   padding: 12px 12px 16px;
 }
@@ -1850,6 +1851,103 @@ img.icon-glyph {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* ---------- 対戦モード ---------- */
+
+.vs-select-panel {
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vs-select-side {
+  flex: 1;
+  min-width: 0;
+}
+
+.vs-select-vs {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--color-accent);
+  text-shadow: 0 2px 0 var(--color-ink);
+  flex-shrink: 0;
+  margin-top: 18px;
+}
+
+.vs-select-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(251, 234, 210, 0.4);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--color-panel);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.vs-select-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.vs-select-hint {
+  max-width: 700px;
+  margin: 14px auto 0;
+  font-size: 12.5px;
+  color: var(--color-danger-bright);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.vs-select-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.vs-battle-bottombar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.vs-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vs-battle-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.vs-result-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.vs-result-content h2 {
+  font-size: 32px;
+  margin: 0;
+}
+
+.vs-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  font-size: 16px;
 }
 
 /* ---------- リザルト ---------- */

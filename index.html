@@ -81,6 +81,7 @@
       <div class="screen-header-actions">
         <button class="btn btn--ghost" data-action="go-title">タイトルへ戻る</button>
         <button class="btn btn--ghost" data-action="go-profile">セーブデータを切り替える</button>
+        <button class="btn btn--ghost" data-action="go-vs-select">⚔️ 対戦モード</button>
         <button class="btn btn--primary" data-action="go-gacha">🎰 ガチャを引く</button>
       </div>
     </header>
@@ -89,6 +90,34 @@
       <div class="difficulty-selector" id="home-difficulty-selector"></div>
     </div>
     <div class="stage-list" id="stage-list"></div>
+  </section>
+
+  <section class="screen" data-screen="vs-select">
+    <header class="screen-header">
+      <h2>対戦モード</h2>
+      <p class="screen-sub">セーブデータを2つ選んで、同じ端末で対戦しよう</p>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
+      </div>
+    </header>
+
+    <div class="vs-select-panel">
+      <div class="vs-select-side">
+        <h3 class="panel-title">プレイヤー1</h3>
+        <select class="vs-select-input" id="vs-select-p1"></select>
+      </div>
+      <div class="vs-select-vs" aria-hidden="true">VS</div>
+      <div class="vs-select-side">
+        <h3 class="panel-title">プレイヤー2</h3>
+        <select class="vs-select-input" id="vs-select-p2"></select>
+      </div>
+    </div>
+
+    <p class="vs-select-hint" id="vs-select-hint" hidden></p>
+
+    <div class="vs-select-actions">
+      <button class="btn btn--primary btn--large" id="btn-vs-start" data-action="start-pvp-battle">対戦開始！</button>
+    </div>
   </section>
 
   <section class="screen" data-screen="gacha">
@@ -222,6 +251,63 @@
     </div>
 
     <div class="battle-result-overlay" id="result-overlay" hidden></div>
+  </section>
+
+  <section class="screen" data-screen="battle-vs">
+    <div class="battle-topbar">
+      <div class="castle-hp castle-hp--enemy">
+        <span class="castle-label" id="vs-p2-name">プレイヤー2</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="vs-p2-hp-fill"></div></div>
+      </div>
+      <div class="battle-timer-wrap">
+        <div class="battle-timer" id="vs-battle-timer">00:00</div>
+        <div class="battle-difficulty">対戦モード</div>
+      </div>
+      <div class="castle-hp castle-hp--player">
+        <span class="castle-label" id="vs-p1-name">プレイヤー1</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="vs-p1-hp-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="battle-lane-wrap">
+      <div class="battle-lane" id="vs-battle-lane">
+        <div class="lane-rows" id="vs-lane-rows"></div>
+        <div class="lane-castle lane-castle--player" aria-hidden="true">🏯</div>
+        <div class="lane-castle lane-castle--enemy" aria-hidden="true">🏯</div>
+        <div class="lane-units" id="vs-lane-units"></div>
+      </div>
+    </div>
+
+    <div class="vs-battle-bottombar">
+      <div class="vs-player-controls">
+        <div class="coin-display">
+          <span class="coin-icon" aria-hidden="true">🪙</span>
+          <span id="vs-p1-coin">0</span>
+        </div>
+        <div class="deploy-row" id="vs-p1-deploy-row"></div>
+      </div>
+      <div class="vs-player-controls">
+        <div class="coin-display">
+          <span class="coin-icon" aria-hidden="true">🪙</span>
+          <span id="vs-p2-coin">0</span>
+        </div>
+        <div class="deploy-row" id="vs-p2-deploy-row"></div>
+      </div>
+      <div class="vs-battle-controls">
+        <button class="btn btn--speed" id="vs-btn-speed" data-action="toggle-vs-speed">x1</button>
+        <button class="btn btn--mute" data-action="toggle-mute">🔊</button>
+      </div>
+    </div>
+
+    <div class="battle-result-overlay" id="vs-result-overlay" hidden>
+      <div class="vs-result-content">
+        <h2 id="vs-result-title"></h2>
+        <div class="vs-result-actions">
+          <button class="btn btn--primary" type="button" data-action="retry-pvp-battle">もう一度対戦</button>
+          <button class="btn btn--ghost" type="button" data-action="go-vs-select">対戦相手選択に戻る</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="screen" data-screen="result">
