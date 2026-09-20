@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>わんこ大戦争</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <section class="screen screen--title is-active" data-screen="title">
+    <div class="title-hero">
+      <svg class="title-paw" viewBox="0 0 100 100" aria-hidden="true">
+        <ellipse cx="50" cy="66" rx="30" ry="24" />
+        <ellipse cx="20" cy="34" rx="12" ry="15" transform="rotate(-20 20 34)" />
+        <ellipse cx="45" cy="18" rx="12" ry="15" />
+        <ellipse cx="70" cy="20" rx="12" ry="15" transform="rotate(12 70 20)" />
+        <ellipse cx="85" cy="42" rx="11" ry="14" transform="rotate(28 85 42)" />
+      </svg>
+      <h1 class="title-logo">わんこ大戦争</h1>
+      <p class="title-copy">にゃんこ帝国の侵略から、わんこ王国を守り抜け。</p>
+      <button class="btn btn--primary btn--large" data-action="go-profile">出撃準備をはじめる</button>
+      <p class="title-note">ブラウザ版プロトタイプ / フェーズ1</p>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="profile">
+    <header class="screen-header">
+      <h2>セーブデータ選択</h2>
+      <p class="screen-sub">あそぶ人を選ぶか、あたらしくはじめよう</p>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-title">タイトルへ戻る</button>
+      </div>
+    </header>
+
+    <div class="profile-list" id="profile-list"></div>
+
+    <div class="profile-new-panel">
+      <h3 class="panel-title">あたらしくはじめる</h3>
+      <form class="profile-new-form" id="profile-new-form">
+        <input type="text" id="profile-new-name" class="profile-new-input" placeholder="なまえを入力（例：たろう）" maxlength="12" required>
+        <button type="submit" class="btn btn--primary">はじめる</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="home">
+    <header class="screen-header">
+      <h2>ステージ選択</h2>
+      <p class="screen-sub">わんこ王国 作戦司令室</p>
+      <div class="header-badges">
+        <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
+        <div class="wallet-badge wallet-badge--ticket"><span aria-hidden="true">🎫</span> わんこチケット <span class="ticket-amount">0</span></div>
+      </div>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-title">タイトルへ戻る</button>
+        <button class="btn btn--ghost" data-action="go-profile">セーブデータを切り替える</button>
+        <button class="btn btn--primary" data-action="go-gacha">🎰 ガチャを引く</button>
+      </div>
+    </header>
+    <div class="difficulty-panel">
+      <h3 class="panel-title">難易度を選んでステージに挑戦しよう</h3>
+      <div class="difficulty-selector" id="home-difficulty-selector"></div>
+    </div>
+    <div class="stage-list" id="stage-list"></div>
+  </section>
+
+  <section class="screen" data-screen="gacha">
+    <header class="screen-header">
+      <h2>わんこガチャ</h2>
+      <p class="screen-sub">わんこチケットを1枚消費して、新しい仲間を迎え入れよう</p>
+      <div class="header-badges">
+        <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
+        <div class="wallet-badge wallet-badge--ticket"><span aria-hidden="true">🎫</span> わんこチケット <span class="ticket-amount">0</span></div>
+      </div>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
+      </div>
+    </header>
+
+    <div class="gacha-stage">
+      <button class="btn btn--primary btn--large" id="btn-gacha-pull" data-action="gacha-pull">ガチャを引く！</button>
+      <div class="gacha-spin" id="gacha-spin" hidden>
+        <div class="gacha-spin-capsule">🎁</div>
+        <p class="gacha-spin-label">抽選中…</p>
+      </div>
+      <div class="gacha-result" id="gacha-result" hidden></div>
+    </div>
+
+    <h3 class="panel-title">ラインナップ</h3>
+    <div class="gacha-pool-list" id="gacha-pool-list"></div>
+  </section>
+
+  <div class="gacha-flash" id="gacha-flash" aria-hidden="true"></div>
+
+  <section class="screen" data-screen="formation">
+    <header class="screen-header">
+      <h2>編成</h2>
+      <p class="screen-sub" id="formation-stage-name"></p>
+      <span class="formation-difficulty-badge" id="formation-difficulty-badge"></span>
+      <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
+        <button class="btn btn--primary" id="btn-sortie" data-action="go-battle">出撃！</button>
+      </div>
+    </header>
+
+    <div class="castle-weapon-panel">
+      <h3 class="panel-title">自城の装備（バトル画面でコインを払って出撃・HPなし）</h3>
+      <div class="castle-weapon-list" id="castle-weapon-list"></div>
+    </div>
+
+    <div class="formation-layout">
+      <div class="formation-panel">
+        <h3 class="panel-title">出撃スロット <span id="slot-count">0/10</span></h3>
+        <div class="slot-list" id="slot-list" aria-label="編成スロット"></div>
+      </div>
+      <div class="formation-panel">
+        <h3 class="panel-title">所属わんこ一覧</h3>
+        <div class="roster-list" id="roster-list" aria-label="キャラクター一覧"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="battle">
+    <div class="battle-topbar">
+      <div class="castle-hp castle-hp--enemy">
+        <span class="castle-label">敵城</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="enemy-hp-fill"></div></div>
+      </div>
+      <div class="battle-timer-wrap">
+        <div class="battle-timer" id="battle-timer">00:00</div>
+        <div class="battle-difficulty" id="battle-difficulty"></div>
+      </div>
+      <div class="castle-hp castle-hp--player">
+        <span class="castle-label">自城</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="player-hp-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="battle-lane-wrap">
+      <div class="battle-lane" id="battle-lane">
+        <div class="lane-rows" id="lane-rows"></div>
+        <div class="lane-castle lane-castle--player" aria-hidden="true">🏯</div>
+        <div class="lane-castle lane-castle--enemy" aria-hidden="true">🏰</div>
+        <div class="lane-units" id="lane-units"></div>
+      </div>
+    </div>
+
+    <div class="battle-bottombar">
+      <div class="coin-display">
+        <span class="coin-icon" aria-hidden="true">🪙</span>
+        <span id="coin-amount">0</span>
+      </div>
+      <div class="deploy-row" id="deploy-row"></div>
+      <button class="btn btn--speed" id="btn-speed" data-action="toggle-speed">x1</button>
+      <button class="btn btn--mute" id="btn-mute" data-action="toggle-mute">🔊</button>
+    </div>
+
+    <div class="battle-result-overlay" id="result-overlay" hidden></div>
+  </section>
+
+  <section class="screen" data-screen="result">
+    <div class="result-panel">
+      <h2 id="result-title">勝利！</h2>
+      <p id="result-message"></p>
+      <div class="result-reward" id="result-reward"></div>
+      <div class="result-unlock" id="result-unlock" hidden></div>
+      <div class="result-actions">
+        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ</button>
+        <button class="btn btn--primary" data-action="retry-battle">もう一度挑戦</button>
+        <button class="btn btn--primary" id="btn-next-stage" data-action="next-stage" hidden>次のステージへ</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script type="module" src="main.js"></script>
+</body>
+</html>
