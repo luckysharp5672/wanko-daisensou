@@ -1911,23 +1911,55 @@ img.icon-glyph {
 
 .vs-battle-bottombar {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 10px;
 }
 
+/* プレイヤーごとの出撃UIを、それぞれの陣地（画面の左右）に寄せて配置する。
+   P2は左端（敵陣側）、P1は右端（自陣側）に寄せてタッチしやすくする */
 .vs-player-controls {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vs-player-controls .deploy-row {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  overflow-y: auto;
+  max-height: 116px;
+}
+
+.vs-player-controls--p2 {
+  align-items: flex-start;
+}
+
+.vs-player-controls--p2 .coin-display,
+.vs-player-controls--p2 .deploy-row {
+  justify-content: flex-start;
+}
+
+.vs-player-controls--p1 {
+  align-items: flex-end;
+}
+
+.vs-player-controls--p1 .coin-display,
+.vs-player-controls--p1 .deploy-row {
+  justify-content: flex-end;
 }
 
 .vs-battle-controls {
+  flex: 0 0 auto;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  padding-top: 2px;
 }
 
 .vs-result-content {
