@@ -131,6 +131,11 @@
       </div>
     </header>
 
+    <div class="favorites-panel">
+      <h3 class="panel-title">お気に入りキャラ（好きなキャラを3体まで大きく表示）</h3>
+      <div class="favorites-row" id="favorites-row"></div>
+    </div>
+
     <div class="castle-weapon-panel">
       <h3 class="panel-title">自城の装備（バトル画面でコインを払って出撃・HPなし）</h3>
       <div class="castle-weapon-list" id="castle-weapon-list"></div>
@@ -145,6 +150,39 @@
         <h3 class="panel-title">所属わんこ一覧</h3>
         <div class="roster-list" id="roster-list" aria-label="キャラクター一覧"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen="character-detail">
+    <header class="screen-header">
+      <h2 id="detail-char-name"></h2>
+      <p class="screen-sub" id="detail-char-subtitle"></p>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="close-character-detail">編成へ戻る</button>
+      </div>
+    </header>
+
+    <div class="detail-hero">
+      <div class="detail-portrait" id="detail-portrait">
+        <img class="detail-portrait-img" id="detail-portrait-img" src="" alt="">
+      </div>
+      <div class="detail-badges" id="detail-badges"></div>
+    </div>
+
+    <div class="detail-section">
+      <h3 class="panel-title">特徴</h3>
+      <div class="detail-stats-row" id="detail-stats-row"></div>
+      <div class="detail-radar-wrap" id="detail-radar"></div>
+    </div>
+
+    <div class="detail-section">
+      <h3 class="panel-title">ストーリー</h3>
+      <p class="detail-flavor" id="detail-flavor"></p>
+    </div>
+
+    <div class="detail-section">
+      <h3 class="panel-title">成長について</h3>
+      <div class="detail-growth" id="detail-growth"></div>
     </div>
   </section>
 

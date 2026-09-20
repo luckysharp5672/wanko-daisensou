@@ -597,6 +597,69 @@ button {
   width: 100%;
 }
 
+.favorites-panel {
+  max-width: 960px;
+  margin: 0 auto 16px;
+  width: 100%;
+}
+
+.favorites-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.favorite-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--card-bg, var(--color-panel));
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 3px 0 rgba(42, 28, 18, 0.08);
+}
+
+.favorite-select {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 2px solid rgba(107, 85, 65, 0.25);
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-ink);
+  font-size: 12px;
+}
+
+.favorite-portrait {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(42, 28, 18, 0.15);
+}
+
+.favorite-portrait.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.06);
+  border: 2px dashed rgba(107, 85, 65, 0.25);
+  cursor: default;
+}
+
+.favorite-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.favorite-portrait-placeholder {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+
 .castle-weapon-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -989,6 +1052,21 @@ button {
   box-shadow: 0 3px 0 var(--color-secondary-dark);
 }
 
+.btn--detail {
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  background: transparent;
+  border: 1.5px solid rgba(107, 85, 65, 0.3);
+  color: var(--color-ink-soft);
+}
+
+.btn--detail:hover {
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+}
+
 .btn--upgrade:disabled {
   background: rgba(0, 0, 0, 0.15);
   color: var(--color-ink-soft);
@@ -1023,6 +1101,97 @@ button {
   background: rgba(0, 0, 0, 0.15);
   color: var(--color-ink-soft);
   box-shadow: none;
+}
+
+/* ---------- キャラクター詳細 ---------- */
+
+.detail-hero {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-portrait {
+  width: min(320px, 80vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  box-shadow: 0 6px 0 rgba(42, 28, 18, 0.2), 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+.detail-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-form-badge {
+  font-size: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.detail-section {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  width: 100%;
+  background: var(--color-panel);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 3px 0 rgba(42, 28, 18, 0.06);
+}
+
+.detail-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-secondary-dark);
+  margin-bottom: 8px;
+}
+
+.detail-radar-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.detail-radar-wrap svg {
+  width: 200px;
+  height: 187px;
+}
+
+.detail-flavor {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.detail-growth p {
+  font-size: 12.5px;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.detail-growth p:last-child {
+  margin-bottom: 0;
 }
 
 /* ---------- ガチャ ---------- */

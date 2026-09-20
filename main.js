@@ -11,6 +11,11 @@ import {
   getEffectiveMaxLevel,
   getFormSuffix,
   getFormBadge,
+  getFormIndex,
+  FORM_SUFFIX,
+  FORM_BONUS,
+  FORM_LEVEL_SPAN,
+  LEVEL_PER_STEP,
   getStatusImage,
   getBattleImage,
   getKirakiraImage,
@@ -52,6 +57,8 @@ const appState = {
   gacha: { tickets: 3 },
   lastGachaResult: null,
   formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
+  // 編成画面上部に大きく表示する「お気に入りキャラ」。最大3体、defIdまたはnull
+  favoriteUnits: [null, null, null],
   selectedDifficulty: 'normal',
   // ステージ選択画面の章トグル開閉状態。null の間は renderHome() が現在攻略中の章だけを開いた状態で初期化する
   expandedChapters: null,
@@ -132,6 +139,7 @@ function createDefaultSaveData() {
     unlockedUnits: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
     unlockedWeapons: CASTLE_WEAPONS.filter((w) => w.startUnlocked).map((w) => w.id),
     formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
+    favoriteUnits: [null, null, null],
     selectedDifficulty: 'normal',
     clearedStagesByDifficulty: Object.fromEntries(DIFFICULTY_LEVELS.map((d) => [d.id, []])),
   };
@@ -148,6 +156,7 @@ function serializeSaveData() {
     unlockedUnits: [...appState.unlockedUnits],
     unlockedWeapons: [...appState.unlockedWeapons],
     formation: appState.formation,
+    favoriteUnits: appState.favoriteUnits,
     selectedDifficulty: appState.selectedDifficulty,
     clearedStagesByDifficulty: Object.fromEntries(
       DIFFICULTY_LEVELS.map((d) => [d.id, [...appState.clearedStagesByDifficulty[d.id]]])
@@ -165,6 +174,7 @@ function applySaveData(data) {
   appState.unlockedUnits = new Set(data.unlockedUnits ?? fallback.unlockedUnits);
   appState.unlockedWeapons = new Set(data.unlockedWeapons ?? fallback.unlockedWeapons);
   appState.formation = data.formation ?? fallback.formation;
+  appState.favoriteUnits = data.favoriteUnits ?? fallback.favoriteUnits;
   appState.selectedDifficulty = data.selectedDifficulty ?? fallback.selectedDifficulty;
   appState.clearedStagesByDifficulty = Object.fromEntries(
     DIFFICULTY_LEVELS.map((d) => [
@@ -756,6 +766,50 @@ function renderCastleWeapons() {
       : '');
 }
 
+// お気に入りキャラ選択セレクトの選択肢（解放済みキャラのみ）を作る
+function favoriteOptionsHtml(selectedId) {
+  const options = UNIT_DEFS.filter((u) => appState.unlockedUnits.has(u.id)).map(
+    (u) => `<option value="${u.id}" ${u.id === selectedId ? 'selected' : ''}>${u.name}</option>`
+  );
+  return `<option value="">未選択</option>${options.join('')}`;
+}
+
+function renderFavorites() {
+  const row = document.getElementById('favorites-row');
+  if (!row) return;
+  row.innerHTML = appState.favoriteUnits
+    .map((defId, i) => {
+      const def = defId ? getUnitDef(defId) : null;
+      return `
+        <div class="favorite-slot">
+          <select class="favorite-select" data-slot-index="${i}">
+            ${favoriteOptionsHtml(defId)}
+          </select>
+          <div class="favorite-portrait${def ? '' : ' is-empty'}" data-slot-index="${i}" style="${def ? `background-image:url('${getKirakiraImage(def.rarity)}')` : ''}">
+            ${def ? `<img class="favorite-portrait-img" src="${getStatusImage(def.id)}" alt="${def.name}">` : '<span class="favorite-portrait-placeholder">未選択</span>'}
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  row.querySelectorAll('.favorite-select').forEach((select) => {
+    select.addEventListener('change', (e) => {
+      const idx = Number(e.target.dataset.slotIndex);
+      appState.favoriteUnits[idx] = e.target.value || null;
+      renderFavorites();
+      persistCurrentProfile();
+    });
+  });
+
+  row.querySelectorAll('.favorite-portrait:not(.is-empty)').forEach((el) => {
+    el.addEventListener('click', () => {
+      const defId = appState.favoriteUnits[Number(el.dataset.slotIndex)];
+      if (defId) openCharacterDetail(defId);
+    });
+  });
+}
+
 function renderFormation() {
   renderWallet();
   const stage = getStage(appState.currentStageId);
@@ -763,6 +817,7 @@ function renderFormation() {
     ? `${stage.chapter} ／ ${stage.name}`
     : '';
   renderFormationDifficultyBadge();
+  renderFavorites();
   renderCastleWeapons();
 
   document.getElementById('slot-count').textContent = `${appState.formation.length}/${MAX_SLOTS}`;
@@ -853,6 +908,7 @@ function renderFormation() {
             <span class="badge badge--cost">コスト ${def.cost}</span>
             ${isGachaUnit ? `<span class="badge badge--limitbreak">限界突破 ${lb}/5</span>` : ''}
           </div>
+          <button class="btn btn--detail" type="button">🔍 くわしく見る</button>
         </div>
       </div>
       <div class="roster-stats">
@@ -894,11 +950,93 @@ function renderFormation() {
         limitBreakUnit(def.id);
       });
     }
+    card.querySelector('.btn--detail').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openCharacterDetail(def.id);
+    });
     rosterList.appendChild(card);
   }
 
   const sortieBtn = document.getElementById('btn-sortie');
   sortieBtn.disabled = appState.formation.length === 0;
+}
+
+// ---------- キャラクター詳細画面 ----------
+
+// レベルアップによる成長・進化・限界突破の仕組みを、そのキャラの現在値に沿って説明する
+function buildGrowthInfoHtml(def, level, lb) {
+  const cap = getEffectiveMaxLevel(def, lb);
+  const formIdx = getFormIndex(level);
+  const lines = [];
+
+  lines.push(`レベルが1上がるごとに、HP・攻撃力がそれぞれ基礎値の+${Math.round(LEVEL_PER_STEP * 100)}%ずつ上昇します。`);
+
+  if (formIdx < FORM_BONUS.length - 1) {
+    const nextLevel = (formIdx + 1) * FORM_LEVEL_SPAN;
+    const nextBonusPct = Math.round((FORM_BONUS[formIdx + 1] - 1) * 100);
+    lines.push(
+      `Lv${nextLevel}に到達すると「${FORM_SUFFIX[formIdx + 1]}」に進化し、能力が基礎値の+${nextBonusPct}%相当まで大幅強化されます。`
+    );
+  } else {
+    lines.push(`すでに最終形態「${FORM_SUFFIX[formIdx] || '第一形態'}」まで進化済みです。`);
+  }
+
+  if (def.rarity === 'basic') {
+    lines.push(`基本キャラのため、最初からレベル上限${MAX_LEVEL}まで育成できます。`);
+  } else if (cap < MAX_LEVEL) {
+    const dupeStock = getDupeStock(def.id);
+    const remainingBreaks = Math.ceil((MAX_LEVEL - cap) / LIMIT_BREAK_STEP);
+    lines.push(
+      `現在のレベル上限は${cap}（限界突破 ${lb}/5）。ガチャで同じキャラが重複した時に1体消費すると上限が+${LIMIT_BREAK_STEP}されます。最大レベル${MAX_LEVEL}まであと${remainingBreaks}回の限界突破が必要です（現在の重複ストック：${dupeStock}個）。`
+    );
+  } else {
+    lines.push(`限界突破が完了し、レベル上限${MAX_LEVEL}まで育成可能です。`);
+  }
+
+  return lines.map((line) => `<p>${line}</p>`).join('');
+}
+
+function renderCharacterDetail(defId) {
+  const def = getUnitDef(defId);
+  if (!def) return;
+  const level = getLevel(defId);
+  const lb = getLimitBreaks(defId);
+  const cap = getEffectiveMaxLevel(def, lb);
+  const radarStats = getRadarStats(def, level);
+  const isGachaUnit = def.rarity !== 'basic';
+
+  document.getElementById('detail-char-name').textContent = displayName(def, level);
+  document.getElementById('detail-char-subtitle').textContent = `${def.breed}・${def.role}`;
+
+  document.getElementById('detail-portrait').style.backgroundImage = `url('${getKirakiraImage(def.rarity)}')`;
+  const portraitImg = document.getElementById('detail-portrait-img');
+  portraitImg.src = getStatusImage(def.id);
+  portraitImg.alt = def.name;
+
+  document.getElementById('detail-badges').innerHTML = `
+    <span class="badge badge--rarity rarity-${def.rarity}">${RARITY_LABELS[def.rarity]}</span>
+    <span class="badge badge--layer">${LAYER_INFO[def.layer].label}</span>
+    <span class="roster-level">Lv.${level}/${cap}</span>
+    ${getFormBadge(level) ? `<span class="detail-form-badge">${getFormBadge(level)}</span>` : ''}
+    ${isGachaUnit ? `<span class="badge badge--limitbreak">限界突破 ${lb}/5</span>` : ''}
+  `;
+
+  document.getElementById('detail-stats-row').innerHTML = `
+    <span>コスト ${def.cost}</span>
+    <span>HP ${radarStats[0].value}</span>
+    <span>攻撃 ${radarStats[1].value}</span>
+    <span>射程 ${def.range}</span>
+    <span>速度 ${def.speed}</span>
+  `;
+
+  document.getElementById('detail-radar').innerHTML = buildRadarChartSvg(radarStats);
+  document.getElementById('detail-flavor').textContent = def.flavor;
+  document.getElementById('detail-growth').innerHTML = buildGrowthInfoHtml(def, level, lb);
+}
+
+function openCharacterDetail(defId) {
+  renderCharacterDetail(defId);
+  showScreen('character-detail');
 }
 
 // ---------- バトル ----------
@@ -1265,6 +1403,8 @@ app.addEventListener('click', (e) => {
     URL.revokeObjectURL(url);
   } else if (action === 'close-export-result') {
     document.getElementById('export-result-panel').hidden = true;
+  } else if (action === 'close-character-detail') {
+    showScreen('formation');
   } else if (action === 'go-home') {
     if (appState.loop) appState.loop.stop();
     renderHome();

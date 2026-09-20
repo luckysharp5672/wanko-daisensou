@@ -5,9 +5,9 @@
 export const MAX_LEVEL = 30;
 export const BASE_LEVEL_CAP = 5; // ガチャ限定キャラの初期レベル上限（限界突破前）
 export const LIMIT_BREAK_STEP = 5; // 重複キャラ1体を素材にレベル上限を+5
-const LEVEL_PER_STEP = 0.06; // レベル1につき HP/攻撃力 +6%（緩やかな成長）
-const FORM_LEVEL_SPAN = 10; // 10レベルごとに進化
-const FORM_BONUS = [1, 1.3, 1.7]; // 進化時の大幅ボーナス（第1形態/第2形態/第3形態）
+export const LEVEL_PER_STEP = 0.06; // レベル1につき HP/攻撃力 +6%（緩やかな成長）
+export const FORM_LEVEL_SPAN = 10; // 10レベルごとに進化
+export const FORM_BONUS = [1, 1.3, 1.7]; // 進化時の大幅ボーナス（第1形態/第2形態/第3形態）
 export const FORM_SUFFIX = ['', '【改】', '【真】'];
 export const FORM_BADGE = ['', '⚔️', '👑'];
 
