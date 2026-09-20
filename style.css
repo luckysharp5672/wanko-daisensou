@@ -278,6 +278,7 @@ button {
 
 .profile-card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -323,6 +324,67 @@ button {
 .profile-new-input:focus {
   outline: none;
   border-color: var(--color-accent);
+}
+
+.export-result-panel {
+  max-width: 900px;
+  margin: 24px auto 0;
+  width: 100%;
+  background: rgba(217, 122, 52, 0.1);
+  border: 2px solid var(--color-primary);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.export-result-hint {
+  font-size: 12.5px;
+  color: var(--color-panel-alt);
+  margin: 4px 0 10px;
+  line-height: 1.5;
+}
+
+.export-result-text,
+.import-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid rgba(251, 234, 210, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--color-panel);
+  font-size: 12px;
+  font-family: 'DejaVu Sans Mono', monospace;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.export-result-text:focus,
+.import-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.export-result-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.import-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.import-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.import-file-label {
+  cursor: pointer;
 }
 
 /* ---------- 共通ヘッダー（ページ移動ボタンを含み、画面上部に固定） ---------- */

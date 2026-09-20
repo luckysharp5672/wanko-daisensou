@@ -36,11 +36,36 @@
 
     <div class="profile-list" id="profile-list"></div>
 
+    <div class="export-result-panel" id="export-result-panel" hidden>
+      <h3 class="panel-title">引き継ぎコード</h3>
+      <p class="export-result-hint">このコードを別の端末の「セーブデータを読み込む」欄に貼り付けてください（コピーしてメッセージ・メモなどで送るか、ファイルとしてダウンロードしてAirDrop等で渡せます）。</p>
+      <textarea class="export-result-text" id="export-result-text" readonly rows="4"></textarea>
+      <div class="export-result-actions">
+        <button class="btn btn--primary" type="button" data-action="copy-export-code">コードをコピー</button>
+        <button class="btn btn--ghost" type="button" data-action="download-export-code">ファイルでダウンロード</button>
+        <button class="btn btn--ghost" type="button" data-action="close-export-result">閉じる</button>
+      </div>
+    </div>
+
     <div class="profile-new-panel">
       <h3 class="panel-title">あたらしくはじめる</h3>
       <form class="profile-new-form" id="profile-new-form">
         <input type="text" id="profile-new-name" class="profile-new-input" placeholder="なまえを入力（例：たろう）" maxlength="12" required>
         <button type="submit" class="btn btn--primary">はじめる</button>
+      </form>
+    </div>
+
+    <div class="profile-new-panel">
+      <h3 class="panel-title">セーブデータを読み込む（他の端末から引き継ぐ）</h3>
+      <form class="import-form" id="import-form">
+        <textarea class="import-input" id="import-code-input" rows="3" placeholder="引き継ぎコードをここに貼り付け（またはファイルを選択）"></textarea>
+        <div class="import-form-actions">
+          <label class="btn btn--ghost import-file-label">
+            ファイルを選択
+            <input type="file" id="import-file-input" accept=".txt,.json" hidden>
+          </label>
+          <button type="submit" class="btn btn--primary">読み込む</button>
+        </div>
       </form>
     </div>
   </section>

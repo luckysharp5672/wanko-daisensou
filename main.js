@@ -246,6 +246,74 @@ function formatSaveDate(timestamp) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+// ---------- セーブデータのエクスポート/インポート（他端末への引き継ぎ用） ----------
+// サーバーを使わず、セーブデータ一式をコード化したテキストを別端末にコピー&ペーストする方式。
+
+const SAVE_CODE_PREFIX = 'WANKO1:';
+
+function encodeSaveCode(profileName, data) {
+  const json = JSON.stringify({ v: 1, name: profileName, data });
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return `${SAVE_CODE_PREFIX}${b64}`;
+}
+
+function decodeSaveCode(code) {
+  const trimmed = code.trim();
+  if (!trimmed.startsWith(SAVE_CODE_PREFIX)) {
+    throw new Error('invalid save code format');
+  }
+  const b64 = trimmed.slice(SAVE_CODE_PREFIX.length);
+  const json = decodeURIComponent(escape(atob(b64)));
+  const payload = JSON.parse(json);
+  if (!payload || typeof payload !== 'object' || !payload.data) {
+    throw new Error('invalid save code payload');
+  }
+  return payload;
+}
+
+function exportProfile(id) {
+  const profile = listProfiles().find((p) => p.id === id);
+  const raw = safeGetItem(saveDataKey(id));
+  if (!profile || !raw) return null;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  return encodeSaveCode(profile.name, data);
+}
+
+function showExportResult(code) {
+  const panel = document.getElementById('export-result-panel');
+  const textEl = document.getElementById('export-result-text');
+  if (!panel || !textEl) return;
+  textEl.value = code;
+  panel.hidden = false;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function importSaveCode(code) {
+  let payload;
+  try {
+    payload = decodeSaveCode(code);
+  } catch {
+    alert('コードの形式が正しくありません。コピーし直すか、ファイルを選び直してもう一度お試しください。');
+    return;
+  }
+  const name = `${payload.name || 'ひきつぎ'}(引き継ぎ)`;
+  const id = makeProfileId();
+  const now = Date.now();
+  const profiles = listProfiles();
+  profiles.push({ id, name, createdAt: now, updatedAt: now, summary: buildSaveSummary(payload.data) });
+  saveProfilesIndex(profiles);
+  safeSetItem(saveDataKey(id), JSON.stringify(payload.data));
+  loadProfile(id);
+  renderHome();
+  showScreen('home');
+  playPrepMusic();
+}
+
 function renderProfileList() {
   const list = document.getElementById('profile-list');
   const profiles = listProfiles().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -267,6 +335,7 @@ function renderProfileList() {
         </div>
         <div class="profile-card-actions">
           <button class="btn btn--primary" type="button" data-action="continue-profile" data-profile-id="${p.id}">つづきから</button>
+          <button class="btn btn--ghost" type="button" data-action="export-profile" data-profile-id="${p.id}">他の端末に引き継ぐ</button>
           <button class="btn btn--ghost btn--danger" type="button" data-action="delete-profile" data-profile-id="${p.id}">削除</button>
         </div>
       </div>`;
@@ -1170,6 +1239,32 @@ app.addEventListener('click', (e) => {
     if (!confirm(`「${label}」のセーブデータを削除します。この操作は取り消せません。よろしいですか？`)) return;
     deleteProfile(id);
     renderProfileList();
+  } else if (action === 'export-profile') {
+    const id = target.dataset.profileId;
+    if (!id) return;
+    const code = exportProfile(id);
+    if (!code) {
+      alert('エクスポートに失敗しました。');
+      return;
+    }
+    showExportResult(code);
+  } else if (action === 'copy-export-code') {
+    const textEl = document.getElementById('export-result-text');
+    textEl.select();
+    navigator.clipboard?.writeText(textEl.value).catch(() => {
+      document.execCommand('copy');
+    });
+  } else if (action === 'download-export-code') {
+    const textEl = document.getElementById('export-result-text');
+    const blob = new Blob([textEl.value], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'wanko-daisensou-save.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  } else if (action === 'close-export-result') {
+    document.getElementById('export-result-panel').hidden = true;
   } else if (action === 'go-home') {
     if (appState.loop) appState.loop.stop();
     renderHome();
@@ -1219,6 +1314,26 @@ document.getElementById('profile-new-form').addEventListener('submit', (e) => {
   renderHome();
   showScreen('home');
   playPrepMusic();
+});
+
+document.getElementById('import-file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('import-code-input').value = String(reader.result || '').trim();
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('import-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('import-code-input');
+  const code = input.value.trim();
+  if (!code) return;
+  importSaveCode(code);
+  input.value = '';
+  document.getElementById('import-file-input').value = '';
 });
 
 // タブを閉じる・リロードする・裏に回すタイミングでも取りこぼしなく保存する
