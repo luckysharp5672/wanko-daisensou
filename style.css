@@ -147,6 +147,18 @@ button {
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
 }
 
+.btn--giveup {
+  background: rgba(122, 35, 49, 0.35);
+  color: var(--color-panel);
+  min-width: 44px;
+  padding: 10px 12px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.btn--giveup:hover {
+  background: var(--color-danger);
+}
+
 .badge {
   display: inline-block;
   padding: 2px 10px;

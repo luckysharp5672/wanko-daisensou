@@ -1688,6 +1688,22 @@ app.addEventListener('click', (e) => {
   } else if (action === 'toggle-mute') {
     toggleMuted();
     updateMuteButton();
+  } else if (action === 'give-up-battle') {
+    if (!confirm('この戦闘をあきらめて編成画面に戻ります。よろしいですか？')) return;
+    if (appState.loop) appState.loop.stop();
+    stopMusic();
+    appState.battle = null;
+    renderFormation();
+    showScreen('formation');
+    playPrepMusic();
+  } else if (action === 'give-up-pvp-battle') {
+    if (!confirm('この対戦をあきらめて対戦相手選択に戻ります。よろしいですか？')) return;
+    if (appState.pvpLoop) appState.pvpLoop.stop();
+    stopMusic();
+    appState.pvpBattle = null;
+    renderVsSelect();
+    showScreen('vs-select');
+    playPrepMusic();
   }
 });
 
