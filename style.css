@@ -10,6 +10,8 @@
   --color-accent: #e3b23c;
   --color-danger: #7a2331;
   --color-danger-bright: #c8443a;
+  --color-pumpkin: #c8621f;
+  --color-pumpkin-bright: #ff8c1a;
   --color-ink: #2a1c12;
   --color-ink-soft: #6b5541;
   --layer-sky: #cdeef4;
@@ -109,6 +111,12 @@ button {
   background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: #fff8ec;
   box-shadow: 0 4px 0 #7a431a, 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+.btn--halloween {
+  background: linear-gradient(180deg, var(--color-pumpkin-bright) 0%, var(--color-pumpkin) 100%);
+  color: #fff8ec;
+  box-shadow: 0 4px 0 #7a2f00, 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -1207,6 +1215,47 @@ button {
 }
 
 /* ---------- ガチャ ---------- */
+
+.gacha-mode-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.gacha-mode-tab {
+  padding: 8px 18px;
+  font-size: 13px;
+  background: rgba(251, 234, 210, 0.08);
+  color: var(--color-panel-alt);
+  border: 2px solid transparent;
+}
+
+.gacha-mode-tab.is-selected {
+  border-color: var(--color-accent);
+  background: rgba(227, 178, 60, 0.16);
+  color: var(--color-accent);
+}
+
+.screen[data-screen='gacha'].is-halloween-mode {
+  background: radial-gradient(circle at 50% 0%, rgba(200, 98, 31, 0.18) 0%, transparent 65%);
+}
+
+.screen[data-screen='gacha'].is-halloween-mode #gacha-screen-title {
+  color: var(--color-pumpkin-bright);
+}
+
+.screen[data-screen='gacha'].is-halloween-mode .gacha-mode-tab[data-gacha-mode='halloween'].is-selected {
+  border-color: var(--color-pumpkin-bright);
+  background: rgba(200, 98, 31, 0.22);
+  color: var(--color-pumpkin-bright);
+}
+
+.screen[data-screen='gacha'].is-halloween-mode #btn-gacha-pull {
+  background: linear-gradient(180deg, var(--color-pumpkin-bright) 0%, var(--color-pumpkin) 100%);
+  box-shadow: 0 4px 0 #7a2f00, 0 8px 16px rgba(0, 0, 0, 0.35);
+}
 
 .gacha-stage {
   display: flex;

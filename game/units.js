@@ -45,6 +45,12 @@ export function getKirakiraImage(rarity) {
   return `assets/kirakira/${rarity.toLowerCase()}.png`;
 }
 
+// ハロウィン限定キャラは通常のレアリティ別背景ではなく、専用の黒光りする背景を使う
+export function getKirakiraImageForDef(def) {
+  if (def.isHalloween) return 'assets/kirakira/halloween.png';
+  return getKirakiraImage(def.rarity);
+}
+
 // 自城に据え付けられた武器。他のキャラと同様に出撃コスト（コイン）が必要だが、
 // HPは持たず撃破されない。一度出撃させれば戦闘終了まで再出撃なしで稼働し続ける。
 // 中距離砲は手数重視、遠距離砲は一撃の重さ重視で、どちらも全レイヤーの敵を狙える。
@@ -914,6 +920,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['black', 'angel', 'boss'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。海面を統べる皇帝が、巨大なジャック・オー・ランタンの兜と海賊マントで仮装。灯る炎で敵を照らし出す。',
   },
   {
@@ -935,6 +942,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['black', 'ancient', 'void'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。フランケンシュタインの怪物に仮装した巨躯。ボルトの首輪と継ぎ接ぎのマントを纏い、地響きを立てて突撃する。',
   },
   {
@@ -956,6 +964,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['floating', 'angel', 'alien'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。とんがり帽子とほうきを携えた魔女姿の軍師。星々の魔法で戦況を読み切る。',
   },
   {
@@ -977,6 +986,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['angel', 'alien', 'boss'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。漆黒のマントを翻す吸血鬼伯爵に仮装した元帥。コウモリの群れを率いて上空を制圧する。',
   },
   {
@@ -998,6 +1008,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['deep', 'red', 'ancient'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。白いシーツをまとった幽霊船長に仮装した提督。朽ちた幽霊船を率いて海面をさまよう。',
   },
   {
@@ -1019,6 +1030,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['black', 'void', 'angel'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。魔女っ子風の衣装で仮装したアイドル。キャンディ型に輝くパールを乱れ飛ばす。',
   },
   {
@@ -1040,6 +1052,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['angel', 'black', 'void'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。骨のように白いペイントを施した黒猫の剣士。影と光の剣に加え、骸骨の踊りで敵を翻弄する。',
   },
   {
@@ -1061,6 +1074,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['floating', 'alien', 'red'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。コウモリの翼を模したマントで仮装した疾風の刃。夜空を切り裂き、槍に宿した稲妻を叩きつける。',
   },
   {
@@ -1082,6 +1096,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['red', 'floating', 'black'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。包帯をぐるぐる巻きにしたミイラ姿の名コンビ。電気と炎を帯びた包帯の剣を共に振るう。',
   },
   {
@@ -1103,6 +1118,7 @@ export const UNIT_DEFS = [
     strongAgainst: ['angel', 'alien', 'boss'],
     startUnlocked: false,
     gachaOnly: true,
+    isHalloween: true,
     flavor: 'ハロウィン限定・伝説レア。骨がのぞく翼で仮装した聖獣。氷柱フラッシュと不気味な突風で戦場を凍りつかせる。',
   },
 ];
@@ -1157,6 +1173,13 @@ export const GACHA_POOL = [
   { defId: 'halloween-kitsune-nezumi-duo', weight: 1 },
   { defId: 'halloween-pegasus-hybrid', weight: 1 },
 ];
+
+// ハロウィンガチャ用プール：通常のガチャプールをベースに、ハロウィン限定キャラだけ
+// 出現ウェイトを大幅に引き上げる（他のキャラは通常ガチャと同じ確率のまま残す）
+const HALLOWEEN_BOOST_WEIGHT = 15;
+export const HALLOWEEN_GACHA_POOL = GACHA_POOL.map((entry) =>
+  entry.defId.startsWith('halloween-') ? { defId: entry.defId, weight: HALLOWEEN_BOOST_WEIGHT } : entry
+);
 
 export function getUnitDef(id) {
   return UNIT_DEFS.find((u) => u.id === id);

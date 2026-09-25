@@ -3,6 +3,7 @@ import { STAGES, getStage } from './game/stages.js';
 import {
   UNIT_DEFS,
   GACHA_POOL,
+  HALLOWEEN_GACHA_POOL,
   CASTLE_WEAPONS,
   MAX_LEVEL,
   LIMIT_BREAK_STEP,
@@ -18,7 +19,7 @@ import {
   LEVEL_PER_STEP,
   getStatusImage,
   getBattleImage,
-  getKirakiraImage,
+  getKirakiraImageForDef,
   getRadarStats,
 } from './game/units.js';
 import { createBattle, createPvpBattle } from './game/battle.js';
@@ -56,6 +57,8 @@ const appState = {
   // 初回プレイ時のみ、わんこチケットを3枚だけ進呈する（以降はボス撃破で入手）
   gacha: { tickets: 3 },
   lastGachaResult: null,
+  // 'normal' または 'halloween'。ガチャ画面の表示切り替え用（セーブデータには保存しない一時状態）
+  gachaMode: 'normal',
   formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
   // 編成画面上部に大きく表示する「お気に入りキャラ」。最大3体、defIdまたはnull
   favoriteUnits: [null, null, null],
@@ -513,14 +516,19 @@ function renderHome() {
 
 // ---------- ガチャ ----------
 
+function activeGachaPool() {
+  return appState.gachaMode === 'halloween' ? HALLOWEEN_GACHA_POOL : GACHA_POOL;
+}
+
 function pullGacha() {
   if (appState.gacha.tickets <= 0) return null;
   appState.gacha.tickets -= 1;
 
-  const totalWeight = GACHA_POOL.reduce((sum, e) => sum + e.weight, 0);
+  const pool = activeGachaPool();
+  const totalWeight = pool.reduce((sum, e) => sum + e.weight, 0);
   let roll = Math.random() * totalWeight;
-  let pickedId = GACHA_POOL[GACHA_POOL.length - 1].defId;
-  for (const entry of GACHA_POOL) {
+  let pickedId = pool[pool.length - 1].defId;
+  for (const entry of pool) {
     if (roll < entry.weight) {
       pickedId = entry.defId;
       break;
@@ -592,11 +600,22 @@ function renderGacha() {
   spinEl.hidden = true;
   spinEl.className = 'gacha-spin';
 
+  document.getElementById('gacha-screen-title').textContent =
+    appState.gachaMode === 'halloween' ? '🎃 ハロウィンガチャ' : 'わんこガチャ';
+  document.getElementById('gacha-screen-sub').textContent =
+    appState.gachaMode === 'halloween'
+      ? 'わんこチケットを1枚消費して、ハロウィン限定キャラの出現率アップ！'
+      : 'わんこチケットを1枚消費して、新しい仲間を迎え入れよう';
+  document.querySelector('[data-screen="gacha"]').classList.toggle('is-halloween-mode', appState.gachaMode === 'halloween');
+  document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
+    tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
+  });
+
   const poolList = document.getElementById('gacha-pool-list');
-  poolList.innerHTML = GACHA_POOL.map((entry) => {
+  poolList.innerHTML = activeGachaPool().map((entry) => {
     const def = getUnitDef(entry.defId);
     return `<div class="gacha-pool-item rarity-${def.rarity} layer-${def.layer}">
-      <div class="gacha-pool-portrait" style="background-image:url('${getKirakiraImage(def.rarity)}')">
+      <div class="gacha-pool-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
         <img src="${getStatusImage(def.id)}" alt="">
       </div>
       <span>${def.name}</span>
@@ -611,7 +630,7 @@ function showGachaResult(result) {
   resultEl.hidden = false;
   resultEl.className = `gacha-result rarity-${result.def.rarity} layer-${result.def.layer}`;
   resultEl.innerHTML = `
-    <div class="gacha-result-portrait" style="background-image:url('${getKirakiraImage(result.def.rarity)}')">
+    <div class="gacha-result-portrait" style="background-image:url('${getKirakiraImageForDef(result.def)}')">
       <img src="${getStatusImage(result.def.id)}" alt="">
     </div>
     <div class="gacha-result-name">${result.def.name}</div>
@@ -791,7 +810,7 @@ function renderFavorites() {
           <select class="favorite-select" data-slot-index="${i}">
             ${favoriteOptionsHtml(defId)}
           </select>
-          <div class="favorite-portrait${def ? '' : ' is-empty'}" data-slot-index="${i}" style="${def ? `background-image:url('${getKirakiraImage(def.rarity)}')` : ''}">
+          <div class="favorite-portrait${def ? '' : ' is-empty'}" data-slot-index="${i}" style="${def ? `background-image:url('${getKirakiraImageForDef(def)}')` : ''}">
             ${def ? `<img class="favorite-portrait-img" src="${getStatusImage(def.id)}" alt="${def.name}">` : '<span class="favorite-portrait-placeholder">未選択</span>'}
           </div>
         </div>
@@ -897,7 +916,7 @@ function renderFormation() {
     card.draggable = true;
     card.innerHTML = `
       <div class="roster-card-head">
-        <div class="roster-portrait" style="background-image:url('${getKirakiraImage(def.rarity)}')">
+        <div class="roster-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
           <img class="roster-portrait-img" src="${getStatusImage(def.id)}" alt="${def.name}">
           ${getFormBadge(level) ? `<span class="roster-form-badge">${getFormBadge(level)}</span>` : ''}
           ${selected ? '<span class="roster-deployed-badge">✓ 出撃中</span>' : ''}
@@ -1014,7 +1033,7 @@ function renderCharacterDetail(defId) {
   document.getElementById('detail-char-name').textContent = displayName(def, level);
   document.getElementById('detail-char-subtitle').textContent = `${def.breed}・${def.role}`;
 
-  document.getElementById('detail-portrait').style.backgroundImage = `url('${getKirakiraImage(def.rarity)}')`;
+  document.getElementById('detail-portrait').style.backgroundImage = `url('${getKirakiraImageForDef(def)}')`;
   const portraitImg = document.getElementById('detail-portrait-img');
   portraitImg.src = getStatusImage(def.id);
   portraitImg.alt = def.name;
@@ -1659,8 +1678,16 @@ app.addEventListener('click', (e) => {
     appState.pvpLoop.setSpeed(appState.pvpSpeed);
     target.textContent = `x${appState.pvpSpeed}`;
   } else if (action === 'go-gacha') {
+    appState.gachaMode = 'normal';
     renderGacha();
     showScreen('gacha');
+  } else if (action === 'go-halloween-gacha') {
+    appState.gachaMode = 'halloween';
+    renderGacha();
+    showScreen('gacha');
+  } else if (action === 'set-gacha-mode') {
+    appState.gachaMode = target.dataset.gachaMode;
+    renderGacha();
   } else if (action === 'gacha-pull') {
     startGachaPull();
   } else if (action === 'select-difficulty') {

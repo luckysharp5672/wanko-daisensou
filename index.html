@@ -83,6 +83,7 @@
         <button class="btn btn--ghost" data-action="go-profile">セーブデータを切り替える</button>
         <button class="btn btn--ghost" data-action="go-vs-select">⚔️ 対戦モード</button>
         <button class="btn btn--primary" data-action="go-gacha">🎰 ガチャを引く</button>
+        <button class="btn btn--primary btn--halloween" data-action="go-halloween-gacha">🎃 ハロウィンガチャ</button>
       </div>
     </header>
     <div class="difficulty-panel">
@@ -122,11 +123,15 @@
 
   <section class="screen" data-screen="gacha">
     <header class="screen-header">
-      <h2>わんこガチャ</h2>
-      <p class="screen-sub">わんこチケットを1枚消費して、新しい仲間を迎え入れよう</p>
+      <h2 id="gacha-screen-title">わんこガチャ</h2>
+      <p class="screen-sub" id="gacha-screen-sub">わんこチケットを1枚消費して、新しい仲間を迎え入れよう</p>
       <div class="header-badges">
         <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
         <div class="wallet-badge wallet-badge--ticket"><span aria-hidden="true">🎫</span> わんこチケット <span class="ticket-amount">0</span></div>
+      </div>
+      <div class="gacha-mode-tabs">
+        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="normal">通常ガチャ</button>
+        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="halloween">🎃 ハロウィンガチャ</button>
       </div>
       <div class="screen-header-actions">
         <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
