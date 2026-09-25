@@ -15,7 +15,6 @@
   --color-ink: #2a1c12;
   --color-ink-soft: #6b5541;
   --layer-sky: #cdeef4;
-  --layer-mid: #f6f4ef;
   --layer-ground: #e3c39e;
   --layer-sea: #c3dcf8;
   --layer-ink: #4a3c2c;
@@ -32,10 +31,6 @@
 /* レイヤー配色（キャラが使えるレイヤーが一目でわかるよう、カード類の背景に適用） */
 .layer-sky {
   --card-bg: var(--layer-sky);
-}
-
-.layer-mid {
-  --card-bg: var(--layer-mid);
 }
 
 .layer-ground {
@@ -1552,7 +1547,7 @@ button {
   position: absolute;
   left: 0;
   right: 0;
-  height: 25%;
+  height: 33.3333%;
   border-bottom: 1px solid rgba(74, 60, 44, 0.15);
 }
 
@@ -1562,10 +1557,6 @@ button {
 
 .lane-row--sky {
   background: var(--layer-sky);
-}
-
-.lane-row--mid {
-  background: var(--layer-mid);
 }
 
 .lane-row--ground {

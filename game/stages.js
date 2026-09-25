@@ -5,12 +5,11 @@
 // 調整されており、クリア報酬として自城の新しい武器が手に入る。
 //
 // レイヤー解放の設計:
-//   第1章-1,2   : 地面のみ
-//   第1章-3〜6  : 地面 + 中空
-//   第1章-7〜10 : 地面 + 中空 + 海面（10はボス戦）
-//   第2章-1〜5  : 海面 + 地面 + 中空 + 上空（全開放）
-//   第2章-6以降（第3〜10章含む）: 毎回ランダムに有効レイヤーを抽選（地面と、ボスステージはボスの出現層を必ず含む）
-//   エクストラステージ: 常に全4レイヤー開放（固定・ランダムなし）
+//   第1章-1,2   : じめんのみ
+//   第1章-3〜10 : じめん + そら（10はボス戦）
+//   第2章-1〜5  : じめん + そら + うみ（全開放）
+//   第2章-6以降（第3〜10章含む）: 毎回ランダムに有効レイヤーを抽選（じめんと、ボスステージはボスの出現層を必ず含む）
+//   エクストラステージ: 常に全3レイヤー開放（固定・ランダムなし）
 
 import { ENEMY_DEFS } from './enemies.js';
 import { LAYER_IDS, LAYER_INFO } from './layers.js';
@@ -88,17 +87,16 @@ function bossLayersOf(bossId) {
 function fixedLayersFor(chapter, stageNum) {
   if (chapter === 1) {
     if (stageNum <= 2) return ['ground'];
-    if (stageNum <= 6) return ['ground', 'mid'];
-    return ['ground', 'mid', 'sea']; // 7〜10
+    return ['ground', 'sky']; // 3〜10
   }
   if (chapter === 2 && stageNum <= 5) {
-    return ['sky', 'mid', 'ground', 'sea'];
+    return ['sky', 'ground', 'sea'];
   }
   return null;
 }
 
 function randomLayers(forceLayers = []) {
-  const optional = ['sky', 'mid', 'sea'].filter((l) => !forceLayers.includes(l));
+  const optional = ['sky', 'sea'].filter((l) => !forceLayers.includes(l));
   const chosen = optional.filter(() => Math.random() < 0.55);
   const set = new Set(['ground', ...chosen, ...forceLayers]);
   return LAYER_IDS.filter((l) => set.has(l));
@@ -152,7 +150,7 @@ function generateWaves(globalIndex, enabledLayers, bossId) {
 
 // 各層で最も安価な基本キャラのコスト（常に入手済みの5キャラ基準）。
 // 複数層が同時に開いても「全層に1体ずつ出す」だけの初期コインを必ず持てるようにする。
-const CHEAPEST_COST_BY_LAYER = { ground: 75, mid: 150, sea: 300, sky: 200 };
+const CHEAPEST_COST_BY_LAYER = { ground: 75, sea: 300, sky: 200 };
 
 function economyFor(globalIndex, isBoss, enabledLayers) {
   const layerCoverageCost = enabledLayers.reduce((sum, l) => sum + (CHEAPEST_COST_BY_LAYER[l] || 0), 0);
@@ -256,7 +254,7 @@ const EXTRA_STAGE_DEFS = [
   },
 ];
 
-const ALL_LAYERS = ['sky', 'mid', 'ground', 'sea'];
+const ALL_LAYERS = ['sky', 'ground', 'sea'];
 
 for (const ex of EXTRA_STAGE_DEFS) {
   const econ = economyFor(ex.effectiveIndex, true, ALL_LAYERS);

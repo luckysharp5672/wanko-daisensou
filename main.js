@@ -1149,16 +1149,18 @@ function startBattle(stageId, difficulty = appState.selectedDifficulty) {
   showScreen('battle');
 }
 
+const LAYER_BAND = 100 / LAYER_IDS.length;
+
 function layerTopPercent(unit) {
   const layers = unit.layers || [unit.layer];
   if (layers.length === 1) {
-    const band = LAYER_INFO[layers[0]].order * 25;
-    return band + (unit.side === 'ally' ? 25 * 0.68 : 25 * 0.3);
+    const band = LAYER_INFO[layers[0]].order * LAYER_BAND;
+    return band + (unit.side === 'ally' ? LAYER_BAND * 0.68 : LAYER_BAND * 0.3);
   }
   // 複数レイヤーにまたがる大型ボスは、またがる帯の中央に大きく表示する
   const orders = layers.map((l) => LAYER_INFO[l].order);
-  const top = Math.min(...orders) * 25;
-  const bottom = (Math.max(...orders) + 1) * 25;
+  const top = Math.min(...orders) * LAYER_BAND;
+  const bottom = (Math.max(...orders) + 1) * LAYER_BAND;
   return (top + bottom) / 2;
 }
 
@@ -1448,8 +1450,8 @@ function startPvpBattle() {
 }
 
 function pvpLayerTopPercent(unit) {
-  const band = LAYER_INFO[unit.layer].order * 25;
-  return band + (unit.owner === 'p1' ? 25 * 0.68 : 25 * 0.3);
+  const band = LAYER_INFO[unit.layer].order * LAYER_BAND;
+  return band + (unit.owner === 'p1' ? LAYER_BAND * 0.68 : LAYER_BAND * 0.3);
 }
 
 function syncPvpUnitNode(unit, laneLength) {
