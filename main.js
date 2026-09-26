@@ -743,6 +743,25 @@ function renderGacha() {
   document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
     tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
   });
+
+  const poolList = document.getElementById('gacha-pool-list');
+  poolList.innerHTML = activeGachaPool()
+    .map((entry) => {
+      const def = getUnitDef(entry.defId);
+      return `<div class="gacha-pool-item rarity-${def.rarity} layer-${def.layer}">
+      <div class="gacha-pool-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
+        <img src="${getStatusImage(def.id)}" alt="">
+      </div>
+      <div class="gacha-pool-info">
+        <span class="gacha-pool-name">${def.name}</span>
+        <div class="gacha-pool-badges">
+          <span class="badge badge--rarity">${RARITY_LABELS[def.rarity]}</span>
+          <span class="badge badge--layer">${LAYER_INFO[def.layer].label}</span>
+        </div>
+      </div>
+    </div>`;
+    })
+    .join('');
 }
 
 function showGachaResult(result) {
