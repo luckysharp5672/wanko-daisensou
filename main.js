@@ -681,6 +681,7 @@ function upgradeUnit(defId) {
   appState.unitLevels[defId] = level + 1;
   renderWallet();
   renderFormation();
+  renderRosterStatus();
   persistCurrentProfile();
 }
 
@@ -693,6 +694,7 @@ function limitBreakUnit(defId) {
   appState.dupeStock[defId] -= 1;
   appState.limitBreaks[defId] = lb + 1;
   renderFormation();
+  renderRosterStatus();
   persistCurrentProfile();
 }
 
@@ -1132,6 +1134,8 @@ function renderRosterStatus() {
     const level = getLevel(def.id);
     const lb = getLimitBreaks(def.id);
     const cap = getEffectiveMaxLevel(def, lb);
+    const dupeStock = getDupeStock(def.id);
+    const upgradeCost = getUpgradeCost(def, level, lb);
     const layerLabel = LAYER_INFO[def.layer].label;
     const isGachaUnit = def.rarity !== 'basic';
     const radarStats = getRadarStats(def, level);
@@ -1163,8 +1167,38 @@ function renderRosterStatus() {
         ${buildRadarChartSvg(radarStats)}
       </div>
       <p class="roster-flavor">${def.flavor}</p>
+      <div class="roster-upgrade">
+        <button class="btn btn--upgrade" type="button" ${upgradeCost === null ? 'disabled' : ''}>
+          ${upgradeCost === null ? (cap >= MAX_LEVEL ? 'MAX' : '上限突破が必要') : `🪙 パワーアップ (${upgradeCost})`}
+        </button>
+      </div>
+      ${
+        isGachaUnit && cap < MAX_LEVEL
+          ? `<div class="roster-limitbreak">
+               <span>重複キャラ ${dupeStock}個所持</span>
+               <button class="btn btn--limitbreak" type="button" ${dupeStock <= 0 ? 'disabled' : ''}>
+                 🧬 限界突破（Lv上限+${LIMIT_BREAK_STEP}）
+               </button>
+             </div>`
+          : ''
+      }
     `;
     card.addEventListener('click', () => openCharacterDetail(def.id, 'roster-status'));
+    const upgradeBtn = card.querySelector('.btn--upgrade');
+    if (upgradeCost !== null) {
+      upgradeBtn.disabled = appState.walletCoin < upgradeCost;
+      upgradeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        upgradeUnit(def.id);
+      });
+    }
+    const limitBreakBtn = card.querySelector('.btn--limitbreak');
+    if (limitBreakBtn) {
+      limitBreakBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        limitBreakUnit(def.id);
+      });
+    }
     container.appendChild(card);
   }
 }
