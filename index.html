@@ -82,6 +82,7 @@
         <button class="btn btn--ghost" data-action="go-title">タイトルへ戻る</button>
         <button class="btn btn--ghost" data-action="go-profile">セーブデータを切り替える</button>
         <button class="btn btn--ghost" data-action="go-vs-select">⚔️ 対戦モード</button>
+        <button class="btn btn--ghost" data-action="go-roster-status">📋 ステータス管理</button>
         <button class="btn btn--primary" data-action="go-gacha">🎰 ガチャを引く</button>
         <button class="btn btn--primary btn--halloween" data-action="go-halloween-gacha">🎃 ハロウィンガチャ</button>
       </div>
@@ -91,6 +92,18 @@
       <div class="difficulty-selector" id="home-difficulty-selector"></div>
     </div>
     <div class="stage-list" id="stage-list"></div>
+  </section>
+
+  <section class="screen" data-screen="roster-status">
+    <header class="screen-header">
+      <h2>ステータス管理</h2>
+      <p class="screen-sub">所持しているキャラクター一覧。カードをタップすると詳細を確認できます</p>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
+      </div>
+    </header>
+
+    <div class="roster-status-list" id="roster-status-list" aria-label="所持キャラクター一覧"></div>
   </section>
 
   <section class="screen" data-screen="vs-select">
@@ -146,9 +159,6 @@
       </div>
       <div class="gacha-result" id="gacha-result" hidden></div>
     </div>
-
-    <h3 class="panel-title">ラインナップ</h3>
-    <div class="gacha-pool-list" id="gacha-pool-list"></div>
   </section>
 
   <div class="gacha-flash" id="gacha-flash" aria-hidden="true"></div>

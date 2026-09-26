@@ -64,6 +64,8 @@ const appState = {
   lastGachaResult: null,
   // 'normal' または 'halloween'。ガチャ画面の表示切り替え用（セーブデータには保存しない一時状態）
   gachaMode: 'normal',
+  // キャラ詳細画面を閉じたときに戻る画面（'formation' または 'roster-status'）。一時状態
+  detailReturnScreen: 'formation',
   formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
   // 編成画面上部に大きく表示する「お気に入りキャラ」。最大3体、defIdまたはnull
   favoriteUnits: [null, null, null],
@@ -625,19 +627,6 @@ function renderGacha() {
   document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
     tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
   });
-
-  const poolList = document.getElementById('gacha-pool-list');
-  poolList.innerHTML = activeGachaPool().map((entry) => {
-    const def = getUnitDef(entry.defId);
-    return `<div class="gacha-pool-item rarity-${def.rarity} layer-${def.layer}">
-      <div class="gacha-pool-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
-        <img src="${getStatusImage(def.id)}" alt="">
-      </div>
-      <span>${def.name}</span>
-      <span class="badge badge--rarity">${RARITY_LABELS[def.rarity]}</span>
-      <span class="badge badge--layer">${LAYER_INFO[def.layer].label}</span>
-    </div>`;
-  }).join('');
 }
 
 function showGachaResult(result) {
@@ -1099,9 +1088,59 @@ function renderCharacterDetail(defId) {
   document.getElementById('detail-growth').innerHTML = buildGrowthInfoHtml(def, level, lb);
 }
 
-function openCharacterDetail(defId) {
+function openCharacterDetail(defId, returnScreen = 'formation') {
   renderCharacterDetail(defId);
+  appState.detailReturnScreen = returnScreen;
   showScreen('character-detail');
+}
+
+// ---------- ステータス管理画面（所持キャラ一覧・閲覧専用） ----------
+
+function renderRosterStatus() {
+  const container = document.getElementById('roster-status-list');
+  if (!container) return;
+  container.innerHTML = '';
+  for (const def of UNIT_DEFS) {
+    if (!appState.unlockedUnits.has(def.id)) continue;
+    const selected = appState.formation.includes(def.id);
+    const level = getLevel(def.id);
+    const lb = getLimitBreaks(def.id);
+    const cap = getEffectiveMaxLevel(def, lb);
+    const layerLabel = LAYER_INFO[def.layer].label;
+    const isGachaUnit = def.rarity !== 'basic';
+    const radarStats = getRadarStats(def, level);
+
+    const card = document.createElement('div');
+    card.className = `roster-card layer-${def.layer}` + (selected ? ' is-selected' : '');
+    card.innerHTML = `
+      <div class="roster-card-head">
+        <div class="roster-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
+          <img class="roster-portrait-img" src="${getStatusImage(def.id)}" alt="${def.name}">
+          ${getFormBadge(level) ? `<span class="roster-form-badge">${getFormBadge(level)}</span>` : ''}
+          ${selected ? '<span class="roster-deployed-badge">✓ 出撃中</span>' : ''}
+        </div>
+        <div class="roster-info">
+          <div class="roster-name-row">
+            <span class="roster-name">${displayName(def, level)} <span class="roster-level">Lv.${level}/${cap}</span></span>
+            <span class="badge badge--layer">${layerLabel}</span>
+          </div>
+          <div class="roster-role">${def.breed}・${def.role}</div>
+          <div class="roster-badges">
+            <span class="badge badge--rarity rarity-${def.rarity}">${RARITY_LABELS[def.rarity]}</span>
+            <span class="badge badge--cost">コスト ${def.cost}</span>
+            ${isGachaUnit ? `<span class="badge badge--limitbreak">限界突破 ${lb}/5</span>` : ''}
+          </div>
+          <button class="btn btn--detail" type="button">🔍 くわしく見る</button>
+        </div>
+      </div>
+      <div class="roster-stats">
+        ${buildRadarChartSvg(radarStats)}
+      </div>
+      <p class="roster-flavor">${def.flavor}</p>
+    `;
+    card.addEventListener('click', () => openCharacterDetail(def.id, 'roster-status'));
+    container.appendChild(card);
+  }
 }
 
 // ---------- バトル ----------
@@ -1696,7 +1735,10 @@ app.addEventListener('click', (e) => {
   } else if (action === 'close-export-result') {
     document.getElementById('export-result-panel').hidden = true;
   } else if (action === 'close-character-detail') {
-    showScreen('formation');
+    showScreen(appState.detailReturnScreen);
+  } else if (action === 'go-roster-status') {
+    renderRosterStatus();
+    showScreen('roster-status');
   } else if (action === 'go-home') {
     if (appState.loop) appState.loop.stop();
     if (appState.pvpLoop) appState.pvpLoop.stop();
