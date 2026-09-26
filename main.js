@@ -415,7 +415,7 @@ function buildLaneRows(enabledLayers) {
     const active = enabledLayers.includes(layerId);
     const row = document.createElement('div');
     row.className = `lane-row lane-row--${layerId}` + (active ? '' : ' is-disabled');
-    row.style.top = `${info.order * 25}%`;
+    row.style.top = `${info.order * LAYER_BAND}%`;
     row.innerHTML = `<span class="lane-row-label">${info.label}${active ? '' : '（封鎖）'}</span>`;
     container.appendChild(row);
   }
@@ -1370,7 +1370,7 @@ function buildPvpLaneRows() {
     const info = LAYER_INFO[layerId];
     const row = document.createElement('div');
     row.className = `lane-row lane-row--${layerId}`;
-    row.style.top = `${info.order * 25}%`;
+    row.style.top = `${info.order * LAYER_BAND}%`;
     row.innerHTML = `<span class="lane-row-label">${info.label}</span>`;
     container.appendChild(row);
   }
