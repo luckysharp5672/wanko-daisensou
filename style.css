@@ -2201,6 +2201,62 @@ img.icon-glyph {
   font-size: 13px;
 }
 
+.result-ranking {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(42, 28, 18, 0.06);
+  border: 1px solid rgba(42, 28, 18, 0.15);
+  text-align: left;
+}
+
+.result-ranking h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-ink-soft);
+}
+
+.result-ranking ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result-ranking li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.result-ranking .ranking-rank {
+  min-width: 32px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.result-ranking .ranking-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-ranking .ranking-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-soft);
+}
+
+.result-ranking .ranking-loading,
+.result-ranking .ranking-empty {
+  color: var(--color-ink-soft);
+  justify-content: center;
+}
+
 .result-actions {
   display: flex;
   justify-content: center;

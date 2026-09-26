@@ -1,0 +1,9 @@
+name = "wanko-daisensou-api"
+main = "src/index.js"
+compatibility_date = "2026-09-26"
+
+# `wrangler d1 create wanko-daisensou` の出力に置き換える
+[[d1_databases]]
+binding = "DB"
+database_name = "wanko-daisensou"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
