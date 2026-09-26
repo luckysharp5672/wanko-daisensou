@@ -83,6 +83,7 @@
         <button class="btn btn--ghost" data-action="go-profile">セーブデータを切り替える</button>
         <button class="btn btn--ghost" data-action="go-vs-select">⚔️ 対戦モード</button>
         <button class="btn btn--ghost" data-action="go-roster-status">📋 ステータス管理</button>
+        <button class="btn btn--ghost" data-action="go-fusion">🔀 合体</button>
         <button class="btn btn--primary" data-action="go-gacha">🎰 ガチャを引く</button>
         <button class="btn btn--primary btn--halloween" data-action="go-halloween-gacha">🎃 ハロウィンガチャ</button>
       </div>
@@ -92,6 +93,20 @@
       <div class="difficulty-selector" id="home-difficulty-selector"></div>
     </div>
     <div class="stage-list" id="stage-list"></div>
+  </section>
+
+  <section class="screen" data-screen="fusion">
+    <header class="screen-header">
+      <h2>合体</h2>
+      <p class="screen-sub">Lv10以上の2体を合体させて、ガチャでは出ない特別なキャラを生み出そう。素材の2体は手持ちからいなくなり、生まれたキャラはLv1から育て直しです</p>
+      <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
+      <div class="screen-header-actions">
+        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
+      </div>
+    </header>
+
+    <div class="fusion-result" id="fusion-result" hidden></div>
+    <div class="fusion-list" id="fusion-list"></div>
   </section>
 
   <section class="screen" data-screen="roster-status">

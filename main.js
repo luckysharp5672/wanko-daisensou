@@ -4,6 +4,8 @@ import {
   UNIT_DEFS,
   GACHA_POOL,
   HALLOWEEN_GACHA_POOL,
+  FUSION_RECIPES,
+  FUSION_MIN_LEVEL,
   CASTLE_WEAPONS,
   MAX_LEVEL,
   LIMIT_BREAK_STEP,
@@ -1196,7 +1198,7 @@ function buildGrowthInfoHtml(def, level, lb) {
     const dupeStock = getDupeStock(def.id);
     const remainingBreaks = Math.ceil((MAX_LEVEL - cap) / LIMIT_BREAK_STEP);
     lines.push(
-      `現在のレベル上限は${cap}（限界突破 ${lb}/5）。ガチャで同じキャラが重複した時に1体消費すると上限が+${LIMIT_BREAK_STEP}されます。最大レベル${MAX_LEVEL}まであと${remainingBreaks}回の限界突破が必要です（現在の重複ストック：${dupeStock}個）。`
+      `現在のレベル上限は${cap}（限界突破 ${lb}/5）。${def.fusionOnly ? 'もう一度合体して同じキャラが重複した時' : 'ガチャで同じキャラが重複した時'}に1体消費すると上限が+${LIMIT_BREAK_STEP}されます。最大レベル${MAX_LEVEL}まであと${remainingBreaks}回の限界突破が必要です（現在の重複ストック：${dupeStock}個）。`
     );
   } else {
     lines.push(`限界突破が完了し、レベル上限${MAX_LEVEL}まで育成可能です。`);
@@ -1247,6 +1249,131 @@ function openCharacterDetail(defId, returnScreen = 'formation') {
   renderCharacterDetail(defId);
   appState.detailReturnScreen = returnScreen;
   showScreen('character-detail');
+}
+
+// ---------- 合体画面 ----------
+
+// 合体できない理由を、足りないものごとに1行ずつ返す（空配列なら合体可能）
+function fusionShortfalls(recipe) {
+  const reasons = [];
+  for (const matId of recipe.materials) {
+    const def = getUnitDef(matId);
+    if (!appState.unlockedUnits.has(matId)) {
+      reasons.push(`${def.name}を持っていません`);
+      continue;
+    }
+    const level = getLevel(matId);
+    if (level < FUSION_MIN_LEVEL) {
+      const cap = getEffectiveMaxLevel(def, getLimitBreaks(matId));
+      const capHint = cap < FUSION_MIN_LEVEL ? `・レベル上限が${cap}なので限界突破が必要` : '';
+      reasons.push(`${def.name}のレベルが足りません（Lv${level}／必要Lv${FUSION_MIN_LEVEL}${capHint}）`);
+    }
+  }
+  if (appState.walletCoin < recipe.cost) {
+    reasons.push(`わんコインが足りません（所持${appState.walletCoin}／必要${recipe.cost}）`);
+  }
+  return reasons;
+}
+
+function fusionUnitChip(defId, sub, subClass) {
+  const def = getUnitDef(defId);
+  return `<div class="fusion-chip layer-${def.layer}">
+    <div class="fusion-chip-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
+      <img src="${getStatusImage(def.id)}" alt="">
+    </div>
+    <div class="fusion-chip-name">${def.name}</div>
+    <div class="fusion-chip-sub ${subClass}">${sub}</div>
+  </div>`;
+}
+
+function renderFusion() {
+  renderWallet();
+  const list = document.getElementById('fusion-list');
+  list.innerHTML = FUSION_RECIPES.map((recipe) => {
+    const result = getUnitDef(recipe.resultId);
+    const reasons = fusionShortfalls(recipe);
+    const [chipA, chipB] = recipe.materials.map((id) => {
+      if (!appState.unlockedUnits.has(id)) return fusionUnitChip(id, '未所持', 'is-ng');
+      const lv = getLevel(id);
+      return fusionUnitChip(id, `Lv${lv}／${FUSION_MIN_LEVEL}`, lv >= FUSION_MIN_LEVEL ? 'is-ok' : 'is-ng');
+    });
+    const owned = appState.unlockedUnits.has(recipe.resultId);
+    const resultChip = fusionUnitChip(
+      recipe.resultId,
+      `${RARITY_LABELS[result.rarity]}${owned ? '・所持中' : ''}`,
+      `rarity-${result.rarity}`
+    );
+    const status = reasons.length
+      ? reasons.map((r) => `<div>${r}</div>`).join('')
+      : '<div>合体できます！</div>';
+    return `<div class="fusion-card">
+      <div class="fusion-formula">
+        ${chipA}<span class="fusion-op">＋</span>${chipB}<span class="fusion-op">→</span>${resultChip}
+      </div>
+      <div class="fusion-foot">
+        <div class="fusion-status ${reasons.length ? 'is-ng' : 'is-ok'}">${status}</div>
+        <button class="btn btn--primary fusion-btn" type="button" data-action="fuse" data-result-id="${recipe.resultId}">🪙 ${recipe.cost}で合体</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// 合体素材として消費したキャラを、所持・育成状況・全編成パターン・お気に入りから取り除く
+function removeUnitFromRoster(defId) {
+  appState.unlockedUnits.delete(defId);
+  delete appState.unitLevels[defId];
+  delete appState.limitBreaks[defId];
+  for (const pattern of appState.formationPatterns) {
+    for (let i = pattern.length - 1; i >= 0; i--) {
+      if (pattern[i] === defId) pattern.splice(i, 1);
+    }
+  }
+  appState.favoriteUnits = appState.favoriteUnits.map((id) => (id === defId ? null : id));
+}
+
+function showFusionResult(def, message) {
+  const el = document.getElementById('fusion-result');
+  el.hidden = false;
+  el.innerHTML = `
+    <div class="fusion-result-portrait" style="background-image:url('${getKirakiraImageForDef(def)}')">
+      <img src="${getStatusImage(def.id)}" alt="">
+    </div>
+    <div class="fusion-result-text">${message}</div>`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function attemptFusion(resultId) {
+  const recipe = FUSION_RECIPES.find((r) => r.resultId === resultId);
+  if (!recipe) return;
+  const reasons = fusionShortfalls(recipe);
+  if (reasons.length) {
+    alert(`合体できません。\n\n${reasons.join('\n')}`);
+    return;
+  }
+  const [a, b] = recipe.materials.map(getUnitDef);
+  const result = getUnitDef(resultId);
+  const lostForever = [a, b].filter((d) => d.rarity === 'basic').map((d) => d.name);
+  const warn = lostForever.length ? `\n※${lostForever.join('・')}はガチャで再入手できません。` : '';
+  const ok = confirm(
+    `${a.name}と${b.name}を合体させて、${result.name}を生み出します。\n` +
+      `素材の2体は手持ちからいなくなり、わんコインを${recipe.cost}消費します。${warn}\nよろしいですか？`
+  );
+  if (!ok) return;
+
+  appState.walletCoin -= recipe.cost;
+  recipe.materials.forEach(removeUnitFromRoster);
+  let message;
+  if (appState.unlockedUnits.has(resultId)) {
+    appState.dupeStock[resultId] = getDupeStock(resultId) + 1;
+    message = `${result.name}が重複しました！限界突破の素材になります（重複 ${appState.dupeStock[resultId]}個）`;
+  } else {
+    appState.unlockedUnits.add(resultId);
+    delete appState.unitLevels[resultId];
+    message = `${result.name}が誕生した！Lv1から育てよう`;
+  }
+  persistCurrentProfile();
+  renderFusion();
+  showFusionResult(result, message);
 }
 
 // ---------- ステータス管理画面（所持キャラ一覧・閲覧専用） ----------
@@ -2116,6 +2243,12 @@ app.addEventListener('click', (e) => {
     document.getElementById('export-result-panel').hidden = true;
   } else if (action === 'close-character-detail') {
     showScreen(appState.detailReturnScreen);
+  } else if (action === 'go-fusion') {
+    document.getElementById('fusion-result').hidden = true;
+    renderFusion();
+    showScreen('fusion');
+  } else if (action === 'fuse') {
+    attemptFusion(target.dataset.resultId);
   } else if (action === 'go-roster-status') {
     renderRosterStatus();
     showScreen('roster-status');
