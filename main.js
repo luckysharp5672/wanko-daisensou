@@ -66,6 +66,8 @@ const appState = {
   gachaMode: 'normal',
   // キャラ詳細画面を閉じたときに戻る画面（'formation' または 'roster-status'）。一時状態
   detailReturnScreen: 'formation',
+  // ステータス管理画面のフィルター・並び替え状態（セーブデータには保存しない一時状態）
+  rosterStatusFilter: { layer: 'all', rarity: 'all', sort: 'default' },
   formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
   // 編成画面上部に大きく表示する「お気に入りキャラ」。最大3体、defIdまたはnull
   favoriteUnits: [null, null, null],
@@ -1096,12 +1098,36 @@ function openCharacterDetail(defId, returnScreen = 'formation') {
 
 // ---------- ステータス管理画面（所持キャラ一覧・閲覧専用） ----------
 
+const ROSTER_RARITY_ORDER = ['basic', 'EX', 'rare', 'superrare', 'legend'];
+
+const ROSTER_SORTERS = {
+  default: null,
+  'level-desc': (a, b) => getLevel(b.id) - getLevel(a.id),
+  'level-asc': (a, b) => getLevel(a.id) - getLevel(b.id),
+  'rarity-desc': (a, b) => ROSTER_RARITY_ORDER.indexOf(b.rarity) - ROSTER_RARITY_ORDER.indexOf(a.rarity),
+  'rarity-asc': (a, b) => ROSTER_RARITY_ORDER.indexOf(a.rarity) - ROSTER_RARITY_ORDER.indexOf(b.rarity),
+  'cost-desc': (a, b) => b.cost - a.cost,
+  'cost-asc': (a, b) => a.cost - b.cost,
+  name: (a, b) => a.name.localeCompare(b.name, 'ja'),
+};
+
 function renderRosterStatus() {
   const container = document.getElementById('roster-status-list');
   if (!container) return;
+  const { layer, rarity, sort } = appState.rosterStatusFilter;
+
+  let list = UNIT_DEFS.filter((def) => appState.unlockedUnits.has(def.id));
+  if (layer !== 'all') list = list.filter((def) => def.layer === layer);
+  if (rarity !== 'all') list = list.filter((def) => def.rarity === rarity);
+  const sorter = ROSTER_SORTERS[sort];
+  if (sorter) list = [...list].sort(sorter);
+
   container.innerHTML = '';
-  for (const def of UNIT_DEFS) {
-    if (!appState.unlockedUnits.has(def.id)) continue;
+  if (list.length === 0) {
+    container.innerHTML = '<p class="roster-status-empty">条件に一致するキャラがいません。</p>';
+    return;
+  }
+  for (const def of list) {
     const selected = appState.formation.includes(def.id);
     const level = getLevel(def.id);
     const lb = getLimitBreaks(def.id);
@@ -1849,6 +1875,19 @@ document.getElementById('import-form').addEventListener('submit', (e) => {
   importSaveCode(code);
   input.value = '';
   document.getElementById('import-file-input').value = '';
+});
+
+document.getElementById('roster-filter-layer').addEventListener('change', (e) => {
+  appState.rosterStatusFilter.layer = e.target.value;
+  renderRosterStatus();
+});
+document.getElementById('roster-filter-rarity').addEventListener('change', (e) => {
+  appState.rosterStatusFilter.rarity = e.target.value;
+  renderRosterStatus();
+});
+document.getElementById('roster-sort').addEventListener('change', (e) => {
+  appState.rosterStatusFilter.sort = e.target.value;
+  renderRosterStatus();
 });
 
 // タブを閉じる・リロードする・裏に回すタイミングでも取りこぼしなく保存する

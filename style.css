@@ -903,6 +903,39 @@ button {
   margin: 0 auto;
 }
 
+.roster-status-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto 14px;
+}
+
+.roster-status-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-panel-alt);
+}
+
+.roster-status-filter select {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(251, 234, 210, 0.08);
+  color: var(--color-panel-alt);
+  font-size: 13px;
+}
+
+.roster-status-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-panel-alt);
+  padding: 24px;
+}
+
 .roster-card {
   background: var(--card-bg);
   border-radius: 12px;

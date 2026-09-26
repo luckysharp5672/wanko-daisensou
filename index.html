@@ -103,6 +103,42 @@
       </div>
     </header>
 
+    <div class="roster-status-toolbar">
+      <label class="roster-status-filter">
+        エリア
+        <select id="roster-filter-layer">
+          <option value="all">すべて</option>
+          <option value="sky">そら</option>
+          <option value="ground">じめん</option>
+          <option value="sea">うみ</option>
+        </select>
+      </label>
+      <label class="roster-status-filter">
+        レア度
+        <select id="roster-filter-rarity">
+          <option value="all">すべて</option>
+          <option value="basic">基本</option>
+          <option value="EX">EX</option>
+          <option value="rare">レア</option>
+          <option value="superrare">超激レア</option>
+          <option value="legend">伝説レア</option>
+        </select>
+      </label>
+      <label class="roster-status-filter">
+        並び替え
+        <select id="roster-sort">
+          <option value="default">図鑑順</option>
+          <option value="level-desc">レベルが高い順</option>
+          <option value="level-asc">レベルが低い順</option>
+          <option value="rarity-desc">レア度が高い順</option>
+          <option value="rarity-asc">レア度が低い順</option>
+          <option value="cost-desc">コストが高い順</option>
+          <option value="cost-asc">コストが低い順</option>
+          <option value="name">名前順</option>
+        </select>
+      </label>
+    </div>
+
     <div class="roster-status-list" id="roster-status-list" aria-label="所持キャラクター一覧"></div>
   </section>
 
