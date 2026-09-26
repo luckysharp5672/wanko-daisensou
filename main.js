@@ -90,6 +90,8 @@ const appState = {
   pvpSpeed: 1,
   // 対戦相手選択画面で編集する出撃スロット（プロフィールの編成とは独立、一時状態）
   vsFormation: { p1: [], p2: [] },
+  // 対戦相手選択画面で各プレイヤーが選んでいる編成パターン番号（一時状態）
+  vsPatternIndex: { p1: 0, p2: 0 },
 };
 
 const laneUnitNodes = new Map();
@@ -306,6 +308,7 @@ function persistCurrentProfile() {
     profiles[idx].summary = buildSaveSummary(data);
     saveProfilesIndex(profiles);
   }
+  scheduleSaveSync(appState.profileId);
 }
 
 function formatSaveDate(timestamp) {
@@ -380,6 +383,86 @@ function importSaveCode(code) {
   renderHome();
   showScreen('home');
   playPrepMusic();
+}
+
+// ---------- クラウド同期・ランキング（Cloudflare Workers + D1） ----------
+// プロフィールID（匿名UUID）をそのままプレイヤーIDとして使い、バックグラウンドで自動同期する。
+// SYNC_API_BASE が空のままなら通信は一切行われず、今まで通りローカル保存のみで動作する。
+
+const SYNC_API_BASE = ''; // 例: 'https://wanko-daisensou-api.your-subdomain.workers.dev'（backend/README.md参照）
+
+let saveSyncTimer = null;
+
+function isSyncEnabled() {
+  return Boolean(SYNC_API_BASE);
+}
+
+function scheduleSaveSync(id) {
+  if (!isSyncEnabled()) return;
+  clearTimeout(saveSyncTimer);
+  saveSyncTimer = setTimeout(() => pushSaveToServer(id), 1500);
+}
+
+async function pushSaveToServer(id) {
+  const profile = listProfiles().find((p) => p.id === id);
+  const raw = safeGetItem(saveDataKey(id));
+  if (!profile || !raw) return;
+  try {
+    await fetch(`${SYNC_API_BASE}/api/save/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: profile.name, data: JSON.parse(raw), updatedAt: profile.updatedAt }),
+    });
+  } catch {
+    /* オフライン等で失敗してもゲーム進行には影響させない */
+  }
+}
+
+async function submitRankingScore(stageId, difficulty, clearTimeMs) {
+  if (!isSyncEnabled() || !appState.profileId) return;
+  const profile = listProfiles().find((p) => p.id === appState.profileId);
+  try {
+    await fetch(`${SYNC_API_BASE}/api/ranking`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerId: appState.profileId,
+        playerName: profile ? profile.name : '名無し',
+        stageId,
+        difficulty,
+        clearTimeMs,
+      }),
+    });
+  } catch {
+    /* 失敗してもゲーム進行には影響させない */
+  }
+}
+
+async function fetchRanking(stageId, difficulty) {
+  if (!isSyncEnabled()) return [];
+  try {
+    const res = await fetch(`${SYNC_API_BASE}/api/ranking/${stageId}?difficulty=${difficulty}&limit=10`);
+    if (!res.ok) return [];
+    const body = await res.json();
+    return body.entries || [];
+  } catch {
+    return [];
+  }
+}
+
+function formatClearTime(ms) {
+  const totalSeconds = ms / 1000;
+  return `${totalSeconds.toFixed(1)}秒`;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[c]);
 }
 
 function renderProfileList() {
@@ -1462,11 +1545,11 @@ function renderBattleFrame() {
     appState._resultHandled = true;
     appState.loop.stop();
     stopMusic();
-    handleBattleResult(rs.result, rs.stage, rs.difficulty);
+    handleBattleResult(rs.result, rs.stage, rs.difficulty, rs.time);
   }
 }
 
-function handleBattleResult(result, stage, difficulty) {
+function handleBattleResult(result, stage, difficulty, clearTimeMs) {
   const overlay = document.getElementById('result-overlay');
   overlay.hidden = false;
   overlay.className = `battle-result-overlay is-${result}`;
@@ -1491,8 +1574,9 @@ function handleBattleResult(result, stage, difficulty) {
     }
     renderWallet();
     persistCurrentProfile();
+    submitRankingScore(stage.id, difficulty, clearTimeMs);
   }
-  appState.lastResult = { stageId: stage.id, result, reward, ticketGained, weaponGained, difficulty };
+  appState.lastResult = { stageId: stage.id, result, reward, ticketGained, weaponGained, difficulty, clearTimeMs };
 
   setTimeout(() => {
     appState._resultHandled = false;
@@ -1539,12 +1623,36 @@ function updateVsSelectValidity() {
   }
 }
 
+// プロフィールの保存済み編成パターン（3つ）を取得。旧セーブデータ互換でformationをパターン1扱いにする
+function getProfileFormationPatterns(data) {
+  if (data && Array.isArray(data.formationPatterns) && data.formationPatterns.length === 3) {
+    return data.formationPatterns;
+  }
+  return [data && Array.isArray(data.formation) ? data.formation : [], [], []];
+}
+
 // 対戦相手選択画面の出撃スロット編集（プロフィールの保存済み編成とは独立の一時的な選択）
+function renderVsPatternTabs(side) {
+  const profileId = document.getElementById(side === 'p1' ? 'vs-select-p1' : 'vs-select-p2').value;
+  const data = profileId ? loadRawProfileData(profileId) : null;
+  const patterns = getProfileFormationPatterns(data);
+  const tabsEl = document.getElementById(side === 'p1' ? 'vs-p1-pattern-tabs' : 'vs-p2-pattern-tabs');
+  if (!tabsEl) return;
+  tabsEl.querySelectorAll('.formation-pattern-tab').forEach((tab) => {
+    const idx = Number(tab.dataset.patternIndex);
+    const count = Array.isArray(patterns[idx]) ? patterns[idx].length : 0;
+    tab.textContent = `パターン${idx + 1}（${count}）`;
+    tab.classList.toggle('is-selected', idx === appState.vsPatternIndex[side]);
+  });
+}
+
 function renderVsFormationSide(side) {
   const profileId = document.getElementById(side === 'p1' ? 'vs-select-p1' : 'vs-select-p2').value;
   const data = profileId ? loadRawProfileData(profileId) : null;
   const unlockedIds = data ? data.unlockedUnits || [] : [];
   const formation = appState.vsFormation[side];
+
+  renderVsPatternTabs(side);
 
   const slotCountEl = document.getElementById(side === 'p1' ? 'vs-p1-slot-count' : 'vs-p2-slot-count');
   if (slotCountEl) slotCountEl.textContent = `${formation.length}/${MAX_SLOTS}`;
@@ -1610,12 +1718,25 @@ function removeVsFormationSlot(side, index) {
   updateVsSelectValidity();
 }
 
+// 対戦相手選択画面でプロフィールの保存済みパターンを読み込む（対戦用の一時コピー、プロフィール本体は変更しない）
+function loadVsFormationPattern(side, index) {
+  const profileId = document.getElementById(side === 'p1' ? 'vs-select-p1' : 'vs-select-p2').value;
+  const data = profileId ? loadRawProfileData(profileId) : null;
+  const patterns = getProfileFormationPatterns(data);
+  appState.vsPatternIndex[side] = index;
+  appState.vsFormation[side] = Array.isArray(patterns[index]) ? [...patterns[index]] : [];
+  renderVsFormationSide(side);
+  updateVsSelectValidity();
+}
+
 function initVsFormationFromProfile(side) {
   const profileId = document.getElementById(side === 'p1' ? 'vs-select-p1' : 'vs-select-p2').value;
   const data = profileId ? loadRawProfileData(profileId) : null;
-  appState.vsFormation[side] = data && Array.isArray(data.formation) ? [...data.formation] : [];
-  renderVsFormationSide(side);
-  updateVsSelectValidity();
+  const activeIndex =
+    data && Number.isInteger(data.activePatternIndex) && data.activePatternIndex >= 0 && data.activePatternIndex < 3
+      ? data.activePatternIndex
+      : 0;
+  loadVsFormationPattern(side, activeIndex);
 }
 
 function renderVsSelect() {
@@ -1828,13 +1949,15 @@ function getNextMainStage(stage) {
 }
 
 function renderResult() {
-  const { result, stageId, reward, ticketGained, weaponGained, difficulty } = appState.lastResult;
+  const { result, stageId, reward, ticketGained, weaponGained, difficulty, clearTimeMs } = appState.lastResult;
   const stage = getStage(stageId);
   const diffInfo = DIFFICULTY_LEVELS.find((d) => d.id === difficulty);
   const title = document.getElementById('result-title');
   const message = document.getElementById('result-message');
   const rewardEl = document.getElementById('result-reward');
   const unlockEl = document.getElementById('result-unlock');
+  const rankingEl = document.getElementById('result-ranking');
+  const rankingListEl = document.getElementById('result-ranking-list');
 
   title.textContent = result === 'win' ? '勝利！' : '敗北…';
   title.className = result === 'win' ? 'is-win' : 'is-lose';
@@ -1842,7 +1965,8 @@ function renderResult() {
     result === 'win'
       ? `「${stage.name}」（${diffInfo ? diffInfo.label : ''}）を突破した！`
       : `「${stage.name}」（${diffInfo ? diffInfo.label : ''}）で自城が陥落した。編成を見直して再挑戦しよう。`;
-  rewardEl.textContent = result === 'win' ? `獲得わんコイン +${reward}` : '';
+  rewardEl.textContent =
+    result === 'win' ? `獲得わんコイン +${reward}（クリアタイム ${formatClearTime(clearTimeMs)}）` : '';
 
   const unlockMessages = [];
   if (ticketGained) {
@@ -1857,6 +1981,30 @@ function renderResult() {
     unlockEl.innerHTML = unlockMessages.join('<br>');
   } else {
     unlockEl.hidden = true;
+  }
+
+  if (rankingEl && rankingListEl) {
+    if (result === 'win' && isSyncEnabled()) {
+      rankingEl.hidden = false;
+      rankingListEl.innerHTML = '<li class="ranking-loading">読み込み中…</li>';
+      fetchRanking(stageId, difficulty).then((entries) => {
+        // 表示中に別の画面へ遷移していたら反映しない
+        if (appState.lastResult.stageId !== stageId || !document.getElementById('result-ranking')) return;
+        if (entries.length === 0) {
+          rankingListEl.innerHTML = '<li class="ranking-empty">まだ記録がありません</li>';
+          return;
+        }
+        rankingListEl.innerHTML = entries
+          .map(
+            (e, i) =>
+              `<li><span class="ranking-rank">${i + 1}位</span><span class="ranking-name">${escapeHtml(e.playerName)}</span><span class="ranking-time">${formatClearTime(e.clearTimeMs)}</span></li>`
+          )
+          .join('');
+      });
+    } else {
+      rankingEl.hidden = true;
+      rankingListEl.innerHTML = '';
+    }
   }
 
   const nextBtn = document.getElementById('btn-next-stage');
@@ -1984,6 +2132,8 @@ app.addEventListener('click', (e) => {
     showScreen('gacha');
   } else if (action === 'switch-formation-pattern') {
     switchFormationPattern(Number(target.dataset.patternIndex));
+  } else if (action === 'switch-vs-formation-pattern') {
+    loadVsFormationPattern(target.dataset.pvpSide, Number(target.dataset.patternIndex));
   } else if (action === 'set-gacha-mode') {
     appState.gachaMode = target.dataset.gachaMode;
     renderGacha();

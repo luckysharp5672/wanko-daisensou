@@ -156,6 +156,11 @@
         <h3 class="panel-title">プレイヤー1</h3>
         <select class="vs-select-input" id="vs-select-p1"></select>
         <div class="vs-formation-editor">
+          <div class="formation-pattern-tabs" id="vs-p1-pattern-tabs">
+            <button type="button" class="btn formation-pattern-tab" data-action="switch-vs-formation-pattern" data-pvp-side="p1" data-pattern-index="0">パターン1</button>
+            <button type="button" class="btn formation-pattern-tab" data-action="switch-vs-formation-pattern" data-pvp-side="p1" data-pattern-index="1">パターン2</button>
+            <button type="button" class="btn formation-pattern-tab" data-action="switch-vs-formation-pattern" data-pvp-side="p1" data-pattern-index="2">パターン3</button>
+          </div>
           <p class="vs-formation-label">出撃スロット <span id="vs-p1-slot-count">0/10</span></p>
           <div class="deploy-row vs-formation-slots" id="vs-p1-slots"></div>
           <p class="vs-formation-label">タップして選択・解除</p>
@@ -167,6 +172,11 @@
         <h3 class="panel-title">プレイヤー2</h3>
         <select class="vs-select-input" id="vs-select-p2"></select>
         <div class="vs-formation-editor">
+          <div class="formation-pattern-tabs" id="vs-p2-pattern-tabs">
+            <button type="button" class="btn formation-pattern-tab" data-action="switch-vs-formation-pattern" data-pvp-side="p2" data-pattern-index="0">パターン1</button>
+            <button type="button" class="btn formation-pattern-tab" data-action="switch-vs-formation-pattern" data-pvp-side="p2" data-pattern-index="1">パターン2</button>
+            <button type="button" class="btn formation-pattern-tab" data-action="switch-vs-formation-pattern" data-pvp-side="p2" data-pattern-index="2">パターン3</button>
+          </div>
           <p class="vs-formation-label">出撃スロット <span id="vs-p2-slot-count">0/10</span></p>
           <div class="deploy-row vs-formation-slots" id="vs-p2-slots"></div>
           <p class="vs-formation-label">タップして選択・解除</p>
@@ -386,6 +396,10 @@
       <p id="result-message"></p>
       <div class="result-reward" id="result-reward"></div>
       <div class="result-unlock" id="result-unlock" hidden></div>
+      <div class="result-ranking" id="result-ranking" hidden>
+        <h3>🏆 このステージのベストタイム</h3>
+        <ol id="result-ranking-list"></ol>
+      </div>
       <div class="result-actions">
         <button class="btn btn--ghost" data-action="go-home">ステージ選択へ</button>
         <button class="btn btn--primary" data-action="retry-battle">もう一度挑戦</button>
