@@ -82,6 +82,8 @@ const appState = {
   pvpBattle: null,
   pvpLoop: null,
   pvpSpeed: 1,
+  // 対戦相手選択画面で編集する出撃スロット（プロフィールの編成とは独立、一時状態）
+  vsFormation: { p1: [], p2: [] },
 };
 
 const laneUnitNodes = new Map();
@@ -1473,12 +1475,115 @@ function loadRawProfileData(id) {
   }
 }
 
-function renderVsSelect() {
-  const profiles = listProfiles().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+function updateVsSelectValidity() {
   const p1Select = document.getElementById('vs-select-p1');
   const p2Select = document.getElementById('vs-select-p2');
   const hint = document.getElementById('vs-select-hint');
   const startBtn = document.getElementById('btn-vs-start');
+  const profiles = listProfiles();
+  const sameSelection = p1Select.value && p1Select.value === p2Select.value;
+
+  if (profiles.length < 2) {
+    hint.hidden = false;
+    hint.textContent = '対戦するには、セーブデータが2つ以上必要です。「セーブデータ選択」画面で新規作成するか、他端末から引き継いでください。';
+    startBtn.disabled = true;
+  } else if (sameSelection) {
+    hint.hidden = false;
+    hint.textContent = '同じセーブデータ同士では対戦できません。プレイヤー1とプレイヤー2で別のセーブデータを選んでください。';
+    startBtn.disabled = true;
+  } else if (appState.vsFormation.p1.length === 0 || appState.vsFormation.p2.length === 0) {
+    hint.hidden = false;
+    hint.textContent = '両プレイヤーとも、出撃スロットに1体以上キャラを選んでください。';
+    startBtn.disabled = true;
+  } else {
+    hint.hidden = true;
+    startBtn.disabled = false;
+  }
+}
+
+// 対戦相手選択画面の出撃スロット編集（プロフィールの保存済み編成とは独立の一時的な選択）
+function renderVsFormationSide(side) {
+  const profileId = document.getElementById(side === 'p1' ? 'vs-select-p1' : 'vs-select-p2').value;
+  const data = profileId ? loadRawProfileData(profileId) : null;
+  const unlockedIds = data ? data.unlockedUnits || [] : [];
+  const formation = appState.vsFormation[side];
+
+  const slotCountEl = document.getElementById(side === 'p1' ? 'vs-p1-slot-count' : 'vs-p2-slot-count');
+  if (slotCountEl) slotCountEl.textContent = `${formation.length}/${MAX_SLOTS}`;
+
+  const slotsEl = document.getElementById(side === 'p1' ? 'vs-p1-slots' : 'vs-p2-slots');
+  if (slotsEl) {
+    if (formation.length === 0) {
+      slotsEl.innerHTML = '<p class="vs-formation-empty">下の一覧からキャラを選んでください</p>';
+    } else {
+      slotsEl.innerHTML = formation
+        .map((defId, i) => {
+          const def = getUnitDef(defId);
+          if (!def) return '';
+          return `<button type="button" class="deploy-btn layer-${def.layer}" data-slot-index="${i}" title="${def.name}（タップで外す）">
+            <span class="deploy-layer">${LAYER_INFO[def.layer].label}</span>
+            <span class="deploy-icon"><img src="${getBattleImage(def.id)}" alt=""></span>
+            <span class="deploy-cost">${def.cost}</span>
+          </button>`;
+        })
+        .join('');
+      slotsEl.querySelectorAll('[data-slot-index]').forEach((btn) => {
+        btn.addEventListener('click', () => removeVsFormationSlot(side, Number(btn.dataset.slotIndex)));
+      });
+    }
+  }
+
+  const rosterEl = document.getElementById(side === 'p1' ? 'vs-p1-roster' : 'vs-p2-roster');
+  if (rosterEl) {
+    const units = UNIT_DEFS.filter((d) => unlockedIds.includes(d.id));
+    rosterEl.innerHTML = units
+      .map((def) => {
+        const selected = formation.includes(def.id);
+        return `<button type="button" class="deploy-btn layer-${def.layer}${selected ? ' is-selected' : ''}" data-def-id="${def.id}" title="${def.name}">
+          <span class="deploy-layer">${LAYER_INFO[def.layer].label}</span>
+          <span class="deploy-icon"><img src="${getBattleImage(def.id)}" alt=""></span>
+          <span class="deploy-cost">${def.cost}</span>
+        </button>`;
+      })
+      .join('');
+    rosterEl.querySelectorAll('[data-def-id]').forEach((btn) => {
+      btn.addEventListener('click', () => toggleVsFormationUnit(side, btn.dataset.defId));
+    });
+  }
+}
+
+function toggleVsFormationUnit(side, defId) {
+  const list = appState.vsFormation[side];
+  const idx = list.indexOf(defId);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+  } else if (list.length < MAX_SLOTS) {
+    list.push(defId);
+  } else {
+    return;
+  }
+  renderVsFormationSide(side);
+  updateVsSelectValidity();
+}
+
+function removeVsFormationSlot(side, index) {
+  appState.vsFormation[side].splice(index, 1);
+  renderVsFormationSide(side);
+  updateVsSelectValidity();
+}
+
+function initVsFormationFromProfile(side) {
+  const profileId = document.getElementById(side === 'p1' ? 'vs-select-p1' : 'vs-select-p2').value;
+  const data = profileId ? loadRawProfileData(profileId) : null;
+  appState.vsFormation[side] = data && Array.isArray(data.formation) ? [...data.formation] : [];
+  renderVsFormationSide(side);
+  updateVsSelectValidity();
+}
+
+function renderVsSelect() {
+  const profiles = listProfiles().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const p1Select = document.getElementById('vs-select-p1');
+  const p2Select = document.getElementById('vs-select-p2');
 
   const optionsHtml = profiles.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
   const prevP1 = p1Select.value;
@@ -1490,24 +1595,11 @@ function renderVsSelect() {
   if (!p1Select.value && profiles[0]) p1Select.value = profiles[0].id;
   if (!p2Select.value && profiles[1]) p2Select.value = profiles[1].id;
 
-  const updateValidity = () => {
-    const sameSelection = p1Select.value && p1Select.value === p2Select.value;
-    if (profiles.length < 2) {
-      hint.hidden = false;
-      hint.textContent = '対戦するには、セーブデータが2つ以上必要です。「セーブデータ選択」画面で新規作成するか、他端末から引き継いでください。';
-      startBtn.disabled = true;
-    } else if (sameSelection) {
-      hint.hidden = false;
-      hint.textContent = '同じセーブデータ同士では対戦できません。プレイヤー1とプレイヤー2で別のセーブデータを選んでください。';
-      startBtn.disabled = true;
-    } else {
-      hint.hidden = true;
-      startBtn.disabled = false;
-    }
-  };
-  p1Select.onchange = updateValidity;
-  p2Select.onchange = updateValidity;
-  updateValidity();
+  p1Select.onchange = () => initVsFormationFromProfile('p1');
+  p2Select.onchange = () => initVsFormationFromProfile('p2');
+
+  initVsFormationFromProfile('p1');
+  initVsFormationFromProfile('p2');
 }
 
 function buildPvpLaneRows() {
@@ -1564,8 +1656,10 @@ function startPvpBattle() {
   const p2Data = loadRawProfileData(p2Id);
   if (!p1Profile || !p2Profile || !p1Data || !p2Data) return;
 
-  const p1 = { name: p1Profile.name, formation: p1Data.formation || [], levels: p1Data.unitLevels || {} };
-  const p2 = { name: p2Profile.name, formation: p2Data.formation || [], levels: p2Data.unitLevels || {} };
+  // 出撃スロットは対戦相手選択画面で編集した内容（プロフィールの保存済み編成とは独立）を使う
+  if (appState.vsFormation.p1.length === 0 || appState.vsFormation.p2.length === 0) return;
+  const p1 = { name: p1Profile.name, formation: appState.vsFormation.p1, levels: p1Data.unitLevels || {} };
+  const p2 = { name: p2Profile.name, formation: appState.vsFormation.p2, levels: p2Data.unitLevels || {} };
 
   appState.pvpBattle = createPvpBattle(p1, p2);
   appState.pvpSpeed = 1;
@@ -1614,7 +1708,8 @@ function syncPvpUnitNode(unit, laneLength) {
     document.getElementById('vs-lane-units').appendChild(node);
     pvpLaneUnitNodes.set(unit.uid, node);
   }
-  const pct = 100 - (unit.x / laneLength) * 100;
+  // プレイヤー1が画面左・プレイヤー2が画面右になるよう、反転せずそのままの座標で描画する
+  const pct = (unit.x / laneLength) * 100;
   node.style.left = `${pct}%`;
   node.style.top = `${pvpLayerTopPercent(unit)}%`;
   node.classList.toggle('is-form1', unit.form === 1);

@@ -1519,6 +1519,19 @@ button {
   flex-direction: row-reverse;
 }
 
+/* 対戦モード: プレイヤー1が画面左・プレイヤー2が画面右になるよう専用クラスで色分け */
+.castle-hp--p1 .hp-bar-fill {
+  background: var(--color-secondary);
+}
+
+.castle-hp--p2 {
+  flex-direction: row-reverse;
+}
+
+.castle-hp--p2 .hp-bar-fill {
+  background: var(--color-danger-bright);
+}
+
 .castle-hp--player .hp-bar-fill {
   background: var(--color-secondary);
   margin-left: auto;
@@ -1666,6 +1679,15 @@ button {
 
 .lane-castle--enemy {
   left: 4px;
+}
+
+/* 対戦モード: プレイヤー1が画面左・プレイヤー2が画面右 */
+.lane-castle--p1 {
+  left: 4px;
+}
+
+.lane-castle--p2 {
+  right: 4px;
 }
 
 .lane-units {
@@ -1838,6 +1860,10 @@ img.icon-glyph {
   opacity: 0.5;
 }
 
+.deploy-btn.is-selected {
+  border: 2px solid var(--color-secondary);
+}
+
 .deploy-lock {
   position: absolute;
   bottom: 2px;
@@ -1953,13 +1979,40 @@ img.icon-glyph {
   margin: 0 auto;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
 }
 
 .vs-select-side {
   flex: 1;
   min-width: 0;
+}
+
+.vs-formation-editor {
+  margin-top: 12px;
+  text-align: left;
+}
+
+.vs-formation-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-panel-alt);
+  margin: 8px 0 4px;
+}
+
+.vs-formation-slots,
+.vs-formation-roster {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  overflow-y: auto;
+  max-height: 160px;
+}
+
+.vs-formation-empty {
+  font-size: 12px;
+  color: var(--color-panel-alt);
+  opacity: 0.75;
+  margin: 4px 0;
 }
 
 .vs-select-vs {
@@ -2012,7 +2065,7 @@ img.icon-glyph {
 }
 
 /* プレイヤーごとの出撃UIを、それぞれの陣地（画面の左右）に寄せて配置する。
-   P2は左端（敵陣側）、P1は右端（自陣側）に寄せてタッチしやすくする */
+   P1は左端（自陣側）、P2は右端（自陣側）に寄せてタッチしやすくする */
 .vs-player-controls {
   flex: 1;
   min-width: 0;
@@ -2028,21 +2081,21 @@ img.icon-glyph {
   max-height: 116px;
 }
 
-.vs-player-controls--p2 {
-  align-items: flex-start;
-}
-
-.vs-player-controls--p2 .coin-display,
-.vs-player-controls--p2 .deploy-row {
-  justify-content: flex-start;
-}
-
 .vs-player-controls--p1 {
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .vs-player-controls--p1 .coin-display,
 .vs-player-controls--p1 .deploy-row {
+  justify-content: flex-start;
+}
+
+.vs-player-controls--p2 {
+  align-items: flex-end;
+}
+
+.vs-player-controls--p2 .coin-display,
+.vs-player-controls--p2 .deploy-row {
   justify-content: flex-end;
 }
 
@@ -2149,6 +2202,14 @@ img.icon-glyph {
 @media (max-width: 480px) {
   .slot-list {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .vs-select-panel {
+    flex-direction: column;
+  }
+
+  .vs-select-vs {
+    margin-top: 0;
   }
 
   .battle-timer {

@@ -155,11 +155,23 @@
       <div class="vs-select-side">
         <h3 class="panel-title">プレイヤー1</h3>
         <select class="vs-select-input" id="vs-select-p1"></select>
+        <div class="vs-formation-editor">
+          <p class="vs-formation-label">出撃スロット <span id="vs-p1-slot-count">0/10</span></p>
+          <div class="deploy-row vs-formation-slots" id="vs-p1-slots"></div>
+          <p class="vs-formation-label">タップして選択・解除</p>
+          <div class="deploy-row vs-formation-roster" id="vs-p1-roster"></div>
+        </div>
       </div>
       <div class="vs-select-vs" aria-hidden="true">VS</div>
       <div class="vs-select-side">
         <h3 class="panel-title">プレイヤー2</h3>
         <select class="vs-select-input" id="vs-select-p2"></select>
+        <div class="vs-formation-editor">
+          <p class="vs-formation-label">出撃スロット <span id="vs-p2-slot-count">0/10</span></p>
+          <div class="deploy-row vs-formation-slots" id="vs-p2-slots"></div>
+          <p class="vs-formation-label">タップして選択・解除</p>
+          <div class="deploy-row vs-formation-roster" id="vs-p2-roster"></div>
+        </div>
       </div>
     </div>
 
@@ -307,48 +319,48 @@
 
   <section class="screen" data-screen="battle-vs">
     <div class="battle-topbar">
-      <div class="castle-hp castle-hp--enemy">
-        <span class="castle-label" id="vs-p2-name">プレイヤー2</span>
-        <div class="hp-bar"><div class="hp-bar-fill" id="vs-p2-hp-fill"></div></div>
+      <div class="castle-hp castle-hp--p1">
+        <span class="castle-label" id="vs-p1-name">プレイヤー1</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="vs-p1-hp-fill"></div></div>
       </div>
       <div class="battle-timer-wrap">
         <div class="battle-timer" id="vs-battle-timer">00:00</div>
         <div class="battle-difficulty">対戦モード</div>
       </div>
-      <div class="castle-hp castle-hp--player">
-        <span class="castle-label" id="vs-p1-name">プレイヤー1</span>
-        <div class="hp-bar"><div class="hp-bar-fill" id="vs-p1-hp-fill"></div></div>
+      <div class="castle-hp castle-hp--p2">
+        <span class="castle-label" id="vs-p2-name">プレイヤー2</span>
+        <div class="hp-bar"><div class="hp-bar-fill" id="vs-p2-hp-fill"></div></div>
       </div>
     </div>
 
     <div class="battle-lane-wrap">
       <div class="battle-lane" id="vs-battle-lane">
         <div class="lane-rows" id="vs-lane-rows"></div>
-        <div class="lane-castle lane-castle--player" aria-hidden="true">🏯</div>
-        <div class="lane-castle lane-castle--enemy" aria-hidden="true">🏯</div>
+        <div class="lane-castle lane-castle--p1" aria-hidden="true">🏯</div>
+        <div class="lane-castle lane-castle--p2" aria-hidden="true">🏯</div>
         <div class="lane-units" id="vs-lane-units"></div>
       </div>
     </div>
 
     <div class="vs-battle-bottombar">
-      <div class="vs-player-controls vs-player-controls--p2">
-        <div class="coin-display">
-          <span class="coin-icon" aria-hidden="true">🪙</span>
-          <span id="vs-p2-coin">0</span>
-        </div>
-        <div class="deploy-row" id="vs-p2-deploy-row"></div>
-      </div>
-      <div class="vs-battle-controls">
-        <button class="btn btn--speed" id="vs-btn-speed" data-action="toggle-vs-speed">x1</button>
-        <button class="btn btn--mute" data-action="toggle-mute">🔊</button>
-        <button class="btn btn--giveup" data-action="give-up-pvp-battle" title="あきらめる">🏳️</button>
-      </div>
       <div class="vs-player-controls vs-player-controls--p1">
         <div class="coin-display">
           <span class="coin-icon" aria-hidden="true">🪙</span>
           <span id="vs-p1-coin">0</span>
         </div>
         <div class="deploy-row" id="vs-p1-deploy-row"></div>
+      </div>
+      <div class="vs-battle-controls">
+        <button class="btn btn--speed" id="vs-btn-speed" data-action="toggle-vs-speed">x1</button>
+        <button class="btn btn--mute" data-action="toggle-mute">🔊</button>
+        <button class="btn btn--giveup" data-action="give-up-pvp-battle" title="あきらめる">🏳️</button>
+      </div>
+      <div class="vs-player-controls vs-player-controls--p2">
+        <div class="coin-display">
+          <span class="coin-icon" aria-hidden="true">🪙</span>
+          <span id="vs-p2-coin">0</span>
+        </div>
+        <div class="deploy-row" id="vs-p2-deploy-row"></div>
       </div>
     </div>
 
