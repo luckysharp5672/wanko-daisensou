@@ -689,6 +689,31 @@ button {
   border: 1px solid rgba(251, 234, 210, 0.16);
   border-radius: 12px;
   padding: 10px 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.castle-weapon-card.is-selected {
+  border-color: var(--color-accent);
+  background: rgba(227, 178, 60, 0.16);
+}
+
+.castle-weapon-card.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.castle-weapon-check {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-weight: 700;
+  color: var(--color-accent);
 }
 
 .castle-weapon-icon {

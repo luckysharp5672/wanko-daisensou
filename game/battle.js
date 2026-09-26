@@ -102,7 +102,7 @@ function stepUnits(state, units, opponents, dt, sign, hpKey, onOpponentKilled) {
   }
 }
 
-export function createBattle(stageId, formation, levels = {}, difficulty = 'normal') {
+export function createBattle(stageId, formation, levels = {}, difficulty = 'normal', selectedWeaponIds = []) {
   const stage = getStage(stageId);
   if (!stage) throw new Error(`unknown stage: ${stageId}`);
   const diff = getDifficultySettings(difficulty);
@@ -128,7 +128,13 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
     spawnQueue: flattenWaves(stage.waves),
     cooldowns: {},
     // 自城の武器はキャラと同様に出撃（コイン消費）が必要。HPは持たず撃破されない
-    castleWeapons: CASTLE_WEAPONS.map((w) => ({ ...w, deployed: false, nextAttackAt: 0, attackFlashUntil: 0 })),
+    // 編成画面で選んだ武器（最大2つ）のみが出撃候補になる。念のためここでも上限を強制する
+    castleWeapons: CASTLE_WEAPONS.filter((w) => selectedWeaponIds.slice(0, 2).includes(w.id)).map((w) => ({
+      ...w,
+      deployed: false,
+      nextAttackAt: 0,
+      attackFlashUntil: 0,
+    })),
     result: null,
   };
 

@@ -39,6 +39,7 @@ import {
 
 const app = document.getElementById('app');
 const MAX_SLOTS = 10;
+const MAX_SELECTED_WEAPONS = 2;
 const SPEED_STEPS = [1, 2, 5];
 const RARITY_LABELS = { basic: '基本', EX: 'EX', rare: 'レア', superrare: '超激レア', legend: '伝説レア' };
 
@@ -50,6 +51,10 @@ const appState = {
   currentStageId: null,
   unlockedUnits: new Set(UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id)),
   unlockedWeapons: new Set(CASTLE_WEAPONS.filter((w) => w.startUnlocked).map((w) => w.id)),
+  // 出撃時に持ち込む自城の武器（最大2つ）。編成画面で選択する
+  selectedWeapons: CASTLE_WEAPONS.filter((w) => w.startUnlocked)
+    .slice(0, MAX_SELECTED_WEAPONS)
+    .map((w) => w.id),
   unitLevels: {},
   limitBreaks: {},
   dupeStock: {},
@@ -147,6 +152,9 @@ function createDefaultSaveData() {
     dupeStock: {},
     unlockedUnits: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
     unlockedWeapons: CASTLE_WEAPONS.filter((w) => w.startUnlocked).map((w) => w.id),
+    selectedWeapons: CASTLE_WEAPONS.filter((w) => w.startUnlocked)
+      .slice(0, MAX_SELECTED_WEAPONS)
+      .map((w) => w.id),
     formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
     favoriteUnits: [null, null, null],
     selectedDifficulty: 'normal',
@@ -164,6 +172,7 @@ function serializeSaveData() {
     dupeStock: appState.dupeStock,
     unlockedUnits: [...appState.unlockedUnits],
     unlockedWeapons: [...appState.unlockedWeapons],
+    selectedWeapons: appState.selectedWeapons,
     formation: appState.formation,
     favoriteUnits: appState.favoriteUnits,
     selectedDifficulty: appState.selectedDifficulty,
@@ -182,6 +191,12 @@ function applySaveData(data) {
   appState.dupeStock = data.dupeStock ?? {};
   appState.unlockedUnits = new Set(data.unlockedUnits ?? fallback.unlockedUnits);
   appState.unlockedWeapons = new Set(data.unlockedWeapons ?? fallback.unlockedWeapons);
+  // 旧セーブデータ（selectedWeapons未保存）は解放済み武器の先頭2つを初期選択とする。
+  // 解放が取り消されることはないが、上限2つは常に厳守する
+  const requestedWeapons = data.selectedWeapons ?? [...appState.unlockedWeapons];
+  appState.selectedWeapons = requestedWeapons
+    .filter((id) => appState.unlockedWeapons.has(id))
+    .slice(0, MAX_SELECTED_WEAPONS);
   appState.formation = data.formation ?? fallback.formation;
   appState.favoriteUnits = data.favoriteUnits ?? fallback.favoriteUnits;
   appState.selectedDifficulty = data.selectedDifficulty ?? fallback.selectedDifficulty;
@@ -763,15 +778,36 @@ function buildRadarChartSvg(stats) {
   `;
 }
 
+function toggleSelectedWeapon(weaponId) {
+  if (!appState.unlockedWeapons.has(weaponId)) return;
+  const idx = appState.selectedWeapons.indexOf(weaponId);
+  if (idx >= 0) {
+    appState.selectedWeapons.splice(idx, 1);
+  } else if (appState.selectedWeapons.length < MAX_SELECTED_WEAPONS) {
+    appState.selectedWeapons.push(weaponId);
+  } else {
+    return;
+  }
+  renderCastleWeapons();
+  persistCurrentProfile();
+}
+
 function renderCastleWeapons() {
   const container = document.getElementById('castle-weapon-list');
   if (!container) return;
+  const countEl = document.getElementById('castle-weapon-count');
+  if (countEl) countEl.textContent = `${appState.selectedWeapons.length}/${MAX_SELECTED_WEAPONS} 選択中`;
+
   const unlocked = CASTLE_WEAPONS.filter((w) => appState.unlockedWeapons.has(w.id));
   const lockedCount = CASTLE_WEAPONS.length - unlocked.length;
+  const capReached = appState.selectedWeapons.length >= MAX_SELECTED_WEAPONS;
   container.innerHTML =
     unlocked
-      .map(
-        (w) => `<div class="castle-weapon-card">
+      .map((w) => {
+        const selected = appState.selectedWeapons.includes(w.id);
+        const disabled = !selected && capReached;
+        return `<button type="button" class="castle-weapon-card${selected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}" data-weapon-id="${w.id}">
+      <span class="castle-weapon-check" aria-hidden="true">${selected ? '✓' : ''}</span>
       <span class="castle-weapon-icon">${w.icon}</span>
       <div>
         <div class="castle-weapon-name">${w.name}</div>
@@ -783,12 +819,16 @@ function renderCastleWeapons() {
         </div>
         <p class="castle-weapon-flavor">${w.flavor}</p>
       </div>
-    </div>`
-      )
+    </button>`;
+      })
       .join('') +
     (lockedCount > 0
       ? `<p class="castle-weapon-hint">★ エクストラステージをクリアすると、新しい自城の武器が手に入ります（残り${lockedCount}種）</p>`
       : '');
+
+  container.querySelectorAll('.castle-weapon-card').forEach((card) => {
+    card.addEventListener('click', () => toggleSelectedWeapon(card.dataset.weaponId));
+  });
 }
 
 // お気に入りキャラ選択セレクトの選択肢（解放済みキャラのみ）を作る
@@ -1097,7 +1137,7 @@ function buildDeployRow(stage) {
     row.appendChild(btn);
   }
 
-  for (const weapon of CASTLE_WEAPONS.filter((w) => appState.unlockedWeapons.has(w.id))) {
+  for (const weapon of CASTLE_WEAPONS.filter((w) => appState.selectedWeapons.includes(w.id))) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'deploy-btn deploy-btn--castle';
@@ -1118,7 +1158,7 @@ function buildDeployRow(stage) {
 function startBattle(stageId, difficulty = appState.selectedDifficulty) {
   appState.currentStageId = stageId;
   const stage = getStage(stageId);
-  appState.battle = createBattle(stageId, appState.formation, appState.unitLevels, difficulty);
+  appState.battle = createBattle(stageId, appState.formation, appState.unitLevels, difficulty, appState.selectedWeapons);
   appState.speed = 1;
   document.getElementById('btn-speed').textContent = 'x1';
 
