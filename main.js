@@ -43,6 +43,9 @@ const MAX_SELECTED_WEAPONS = 2;
 const SPEED_STEPS = [1, 2, 5];
 const RARITY_LABELS = { basic: '基本', EX: 'EX', rare: 'レア', superrare: '超激レア', legend: '伝説レア' };
 
+// 編成パターンの初期値（パターン1は最初から仲間の基本キャラ、パターン2・3は空で始まる）
+const DEFAULT_FORMATION = UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id);
+
 const appState = {
   // 現在ロード中のセーブデータのプロフィールID（未選択の間はnull）
   profileId: null,
@@ -68,7 +71,10 @@ const appState = {
   detailReturnScreen: 'formation',
   // ステータス管理画面のフィルター・並び替え状態（セーブデータには保存しない一時状態）
   rosterStatusFilter: { layer: 'all', rarity: 'all', sort: 'default' },
-  formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
+  // 編成パターン（最大3つ）。appState.formationは常にこのうち選択中の1つと同じ配列を指す
+  formationPatterns: [DEFAULT_FORMATION, [], []],
+  activePatternIndex: 0,
+  formation: DEFAULT_FORMATION,
   // 編成画面上部に大きく表示する「お気に入りキャラ」。最大3体、defIdまたはnull
   favoriteUnits: [null, null, null],
   selectedDifficulty: 'normal',
@@ -161,7 +167,9 @@ function createDefaultSaveData() {
     selectedWeapons: CASTLE_WEAPONS.filter((w) => w.startUnlocked)
       .slice(0, MAX_SELECTED_WEAPONS)
       .map((w) => w.id),
-    formation: UNIT_DEFS.filter((u) => u.startUnlocked).map((u) => u.id),
+    formationPatterns: [[...DEFAULT_FORMATION], [], []],
+    activePatternIndex: 0,
+    formation: [...DEFAULT_FORMATION],
     favoriteUnits: [null, null, null],
     selectedDifficulty: 'normal',
     clearedStagesByDifficulty: Object.fromEntries(DIFFICULTY_LEVELS.map((d) => [d.id, []])),
@@ -179,6 +187,8 @@ function serializeSaveData() {
     unlockedUnits: [...appState.unlockedUnits],
     unlockedWeapons: [...appState.unlockedWeapons],
     selectedWeapons: appState.selectedWeapons,
+    formationPatterns: appState.formationPatterns,
+    activePatternIndex: appState.activePatternIndex,
     formation: appState.formation,
     favoriteUnits: appState.favoriteUnits,
     selectedDifficulty: appState.selectedDifficulty,
@@ -203,7 +213,17 @@ function applySaveData(data) {
   appState.selectedWeapons = requestedWeapons
     .filter((id) => appState.unlockedWeapons.has(id))
     .slice(0, MAX_SELECTED_WEAPONS);
-  appState.formation = data.formation ?? fallback.formation;
+  if (Array.isArray(data.formationPatterns) && data.formationPatterns.length === 3) {
+    appState.formationPatterns = data.formationPatterns.map((p) => (Array.isArray(p) ? [...p] : []));
+  } else {
+    // 旧セーブデータ（formationPatterns未保存）は既存の編成をパターン1として引き継ぐ
+    appState.formationPatterns = [data.formation ?? fallback.formation, [], []];
+  }
+  appState.activePatternIndex =
+    Number.isInteger(data.activePatternIndex) && data.activePatternIndex >= 0 && data.activePatternIndex < 3
+      ? data.activePatternIndex
+      : 0;
+  appState.formation = appState.formationPatterns[appState.activePatternIndex];
   appState.favoriteUnits = data.favoriteUnits ?? fallback.favoriteUnits;
   appState.selectedDifficulty = data.selectedDifficulty ?? fallback.selectedDifficulty;
   appState.clearedStagesByDifficulty = Object.fromEntries(
@@ -683,6 +703,23 @@ function reorderFormation(fromIndex, toIndex) {
   persistCurrentProfile();
 }
 
+function switchFormationPattern(index) {
+  if (index === appState.activePatternIndex || !appState.formationPatterns[index]) return;
+  appState.activePatternIndex = index;
+  appState.formation = appState.formationPatterns[index];
+  renderFormation();
+  persistCurrentProfile();
+}
+
+function renderFormationPatternTabs() {
+  document.querySelectorAll('.formation-pattern-tab').forEach((tab) => {
+    const idx = Number(tab.dataset.patternIndex);
+    const count = appState.formationPatterns[idx].length;
+    tab.textContent = `パターン${idx + 1}（${count}/${MAX_SLOTS}）`;
+    tab.classList.toggle('is-selected', idx === appState.activePatternIndex);
+  });
+}
+
 function upgradeUnit(defId) {
   const def = getUnitDef(defId);
   const level = getLevel(defId);
@@ -886,6 +923,7 @@ function renderFormation() {
     ? `${stage.chapter} ／ ${stage.name}`
     : '';
   renderFormationDifficultyBadge();
+  renderFormationPatternTabs();
   renderFavorites();
   renderCastleWeapons();
 
@@ -1944,6 +1982,8 @@ app.addEventListener('click', (e) => {
     appState.gachaMode = 'halloween';
     renderGacha();
     showScreen('gacha');
+  } else if (action === 'switch-formation-pattern') {
+    switchFormationPattern(Number(target.dataset.patternIndex));
   } else if (action === 'set-gacha-mode') {
     appState.gachaMode = target.dataset.gachaMode;
     renderGacha();

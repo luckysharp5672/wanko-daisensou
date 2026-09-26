@@ -846,6 +846,27 @@ button {
   padding: 14px;
 }
 
+.formation-pattern-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.formation-pattern-tab {
+  padding: 6px 14px;
+  font-size: 12px;
+  background: rgba(251, 234, 210, 0.08);
+  color: var(--color-panel-alt);
+  border: 2px solid transparent;
+}
+
+.formation-pattern-tab.is-selected {
+  border-color: var(--color-accent);
+  background: rgba(227, 178, 60, 0.16);
+  color: var(--color-accent);
+}
+
 .panel-title {
   font-family: var(--font-display);
   color: var(--color-accent);
