@@ -302,6 +302,16 @@ button {
   font-size: 13px;
 }
 
+.profile-card-actions .btn--ghost:not(.btn--danger) {
+  color: var(--color-ink);
+  border-color: rgba(42, 28, 18, 0.3);
+}
+
+.profile-card-actions .btn--ghost:not(.btn--danger):hover {
+  border-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
+}
+
 .btn--danger {
   border-color: var(--color-danger-bright);
   color: var(--color-danger-bright);
