@@ -906,9 +906,10 @@ button {
 .roster-status-toolbar {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 14px;
   max-width: 1200px;
-  margin: 0 auto 14px;
+  margin: 12px auto 0;
 }
 
 .roster-status-filter {
@@ -918,6 +919,7 @@ button {
   font-size: 12px;
   font-weight: 700;
   color: var(--color-panel-alt);
+  text-align: left;
 }
 
 .roster-status-filter select {
