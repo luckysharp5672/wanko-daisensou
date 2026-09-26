@@ -246,6 +246,14 @@ function deleteProfile(id) {
   }
 }
 
+function renameProfile(id, name) {
+  const profiles = listProfiles();
+  const idx = profiles.findIndex((p) => p.id === id);
+  if (idx < 0) return;
+  profiles[idx].name = name;
+  saveProfilesIndex(profiles);
+}
+
 function loadProfile(id) {
   const raw = safeGetItem(saveDataKey(id));
   let data;
@@ -373,6 +381,7 @@ function renderProfileList() {
         </div>
         <div class="profile-card-actions">
           <button class="btn btn--primary" type="button" data-action="continue-profile" data-profile-id="${p.id}">つづきから</button>
+          <button class="btn btn--ghost" type="button" data-action="rename-profile" data-profile-id="${p.id}">名前を変更</button>
           <button class="btn btn--ghost" type="button" data-action="export-profile" data-profile-id="${p.id}">他の端末に引き継ぐ</button>
           <button class="btn btn--ghost btn--danger" type="button" data-action="delete-profile" data-profile-id="${p.id}">削除</button>
         </div>
@@ -1760,6 +1769,17 @@ app.addEventListener('click', (e) => {
     renderHome();
     showScreen('home');
     playPrepMusic();
+  } else if (action === 'rename-profile') {
+    const id = target.dataset.profileId;
+    if (!id) return;
+    const profile = listProfiles().find((p) => p.id === id);
+    if (!profile) return;
+    const nextName = prompt('あたらしい名前を入力してください', profile.name);
+    if (nextName === null) return;
+    const trimmed = nextName.trim().slice(0, 12);
+    if (!trimmed) return;
+    renameProfile(id, trimmed);
+    renderProfileList();
   } else if (action === 'delete-profile') {
     const id = target.dataset.profileId;
     if (!id) return;
