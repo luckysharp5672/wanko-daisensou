@@ -114,6 +114,12 @@ button {
   box-shadow: 0 4px 0 #7a2f00, 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
+.btn--mecha {
+  background: linear-gradient(180deg, #8fb4cc 0%, #4f6f86 100%);
+  color: #f2f8fc;
+  box-shadow: 0 4px 0 #2b3f4e, 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
 .btn--primary:hover:not(:disabled) {
   filter: brightness(1.06);
 }
@@ -1490,6 +1496,25 @@ button {
   border-color: var(--color-pumpkin-bright);
   background: rgba(200, 98, 31, 0.22);
   color: var(--color-pumpkin-bright);
+}
+
+.screen[data-screen='gacha'].is-mecha-mode {
+  background: radial-gradient(circle at 50% 0%, rgba(120, 170, 205, 0.2) 0%, transparent 65%);
+}
+
+.screen[data-screen='gacha'].is-mecha-mode #gacha-screen-title {
+  color: #a9d1ea;
+}
+
+.screen[data-screen='gacha'].is-mecha-mode .gacha-mode-tab[data-gacha-mode='mecha'].is-selected {
+  border-color: #a9d1ea;
+  background: rgba(120, 170, 205, 0.22);
+  color: #a9d1ea;
+}
+
+.screen[data-screen='gacha'].is-mecha-mode #btn-gacha-pull {
+  background: linear-gradient(180deg, #8fb4cc 0%, #4f6f86 100%);
+  box-shadow: 0 4px 0 #2b3f4e, 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
 .screen[data-screen='gacha'].is-halloween-mode #btn-gacha-pull {

@@ -4,6 +4,7 @@ import {
   UNIT_DEFS,
   GACHA_POOL,
   HALLOWEEN_GACHA_POOL,
+  MECHA_GACHA_POOL,
   FUSION_RECIPES,
   FUSION_MIN_LEVEL,
   CASTLE_WEAPONS,
@@ -67,7 +68,7 @@ const appState = {
   // 初回プレイ時のみ、わんこチケットを3枚だけ進呈する（以降はボス撃破で入手）
   gacha: { tickets: 3 },
   lastGachaResult: null,
-  // 'normal' または 'halloween'。ガチャ画面の表示切り替え用（セーブデータには保存しない一時状態）
+  // 'normal' / 'halloween' / 'mecha'。ガチャ画面の表示切り替え用（セーブデータには保存しない一時状態）
   gachaMode: 'normal',
   // キャラ詳細画面を閉じたときに戻る画面（'formation' または 'roster-status'）。一時状態
   detailReturnScreen: 'formation',
@@ -652,7 +653,9 @@ function renderHome() {
 // ---------- ガチャ ----------
 
 function activeGachaPool() {
-  return appState.gachaMode === 'halloween' ? HALLOWEEN_GACHA_POOL : GACHA_POOL;
+  if (appState.gachaMode === 'halloween') return HALLOWEEN_GACHA_POOL;
+  if (appState.gachaMode === 'mecha') return MECHA_GACHA_POOL;
+  return GACHA_POOL;
 }
 
 function pullGacha() {
@@ -735,13 +738,17 @@ function renderGacha() {
   spinEl.hidden = true;
   spinEl.className = 'gacha-spin';
 
-  document.getElementById('gacha-screen-title').textContent =
-    appState.gachaMode === 'halloween' ? '🎃 ハロウィンガチャ' : 'わんこガチャ';
-  document.getElementById('gacha-screen-sub').textContent =
-    appState.gachaMode === 'halloween'
-      ? 'わんこチケットを1枚消費して、ハロウィン限定キャラの出現率アップ！'
-      : 'わんこチケットを1枚消費して、新しい仲間を迎え入れよう';
-  document.querySelector('[data-screen="gacha"]').classList.toggle('is-halloween-mode', appState.gachaMode === 'halloween');
+  const GACHA_TEXT = {
+    normal: ['わんこガチャ', 'わんこチケットを1枚消費して、新しい仲間を迎え入れよう'],
+    halloween: ['🎃 ハロウィンガチャ', 'わんこチケットを1枚消費して、ハロウィン限定キャラの出現率アップ！'],
+    mecha: ['🤖 メカガチャ', 'わんこチケットを1枚消費して、メカ化したキャラだけが出るガチャを引こう'],
+  };
+  const [title, sub] = GACHA_TEXT[appState.gachaMode] || GACHA_TEXT.normal;
+  document.getElementById('gacha-screen-title').textContent = title;
+  document.getElementById('gacha-screen-sub').textContent = sub;
+  const gachaScreen = document.querySelector('[data-screen="gacha"]');
+  gachaScreen.classList.toggle('is-halloween-mode', appState.gachaMode === 'halloween');
+  gachaScreen.classList.toggle('is-mecha-mode', appState.gachaMode === 'mecha');
   document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
     tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
   });
@@ -2280,6 +2287,10 @@ app.addEventListener('click', (e) => {
     showScreen('gacha');
   } else if (action === 'go-halloween-gacha') {
     appState.gachaMode = 'halloween';
+    renderGacha();
+    showScreen('gacha');
+  } else if (action === 'go-mecha-gacha') {
+    appState.gachaMode = 'mecha';
     renderGacha();
     showScreen('gacha');
   } else if (action === 'switch-formation-pattern') {
