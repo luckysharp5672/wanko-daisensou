@@ -248,7 +248,7 @@ export const ENEMY_DEFS = [
     name: '亡者の王ゾンビニャン',
     attribute: 'boss',
     icon: '🧟',
-    layers: ['ground', 'sea'],
+    layers: ['sky', 'ground'],
     minIndex: 60,
     hp: 27000,
     atk: 380,

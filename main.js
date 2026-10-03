@@ -561,6 +561,22 @@ function buildLaneRows(enabledLayers) {
   }
 }
 
+// 戦闘画面の背景にご当地イラストを敷く。画像が無いステージ（チュートリアル・エクストラ・未作成）は
+// 読み込みに失敗するので、その場合は従来どおり色分けの帯だけで表示する
+function applyBattleBackground(stage) {
+  const lane = document.getElementById('battle-lane');
+  lane.classList.remove('has-bg');
+  lane.style.backgroundImage = '';
+  if (!stage.bgImage) return;
+  const img = new Image();
+  img.onload = () => {
+    if (appState.currentStageId !== stage.id) return;
+    lane.style.backgroundImage = `url('${stage.bgImage}')`;
+    lane.classList.add('has-bg');
+  };
+  img.src = stage.bgImage;
+}
+
 // ---------- ホーム（ステージ選択） ----------
 
 const LOWER_DIFFICULTY = { hard: 'normal', extreme: 'hard' };
@@ -662,7 +678,6 @@ function renderHome() {
     card.innerHTML = `
       <div class="stage-card-name">${stage.name}
         ${stage.extra ? '<span class="badge badge--extra">EXTRA</span>' : stage.boss ? '<span class="badge badge--boss">BOSS</span>' : ''}
-        ${stage.randomLayer ? '<span class="badge badge--random">ランダム</span>' : ''}
       </div>
       <div class="stage-card-desc">${stage.description}</div>
       <div class="stage-card-layers">${layerBadges}</div>
@@ -1589,6 +1604,7 @@ function startBattle(stageId, difficulty = appState.selectedDifficulty) {
   document.getElementById('result-overlay').className = 'battle-result-overlay';
 
   buildLaneRows(stage.enabledLayers);
+  applyBattleBackground(stage);
   buildDeployRow(stage);
   playBattleMusic(stage.boss);
   updateMuteButton();
