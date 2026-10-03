@@ -139,7 +139,7 @@ const CHAPTERS = [
       { place: 'しんせかい', layers: ['ground', 'sky'], text: 'つうてんかくと串カツの町。' },
       { place: 'てんのうじ', layers: ['ground', 'sky'], text: 'あべのハルカスとしてんのうじ。' },
       { place: 'おおさかじょう', layers: ['ground', 'sky'], text: '堀に囲まれたおおさかじょう。' },
-      { place: 'ゆーえすじぇい', layers: ['ground', 'sky', 'sea'], text: 'ベイエリアのテーマパーク。' },
+      { place: 'USJ', layers: ['ground', 'sky', 'sea'], text: 'ベイエリアのテーマパーク。' },
       { place: 'さかい', layers: ['ground'], text: '巨大な前方後円墳と刃物の町。' },
       { place: 'きしわだ', layers: ['ground', 'sky'], text: 'だんじり祭りときしわだじょう。' },
       { place: 'いずみふちゅう', layers: ['ground'], text: 'いずみのくにの国府があった町。泉の湧く古い神社を守れ。' },
