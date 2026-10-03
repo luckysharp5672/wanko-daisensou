@@ -1,5 +1,5 @@
 import { createLoop } from './game/engine.js';
-import { STAGES, getStage } from './game/stages.js';
+import { STAGES, getStage, isStageInDifficulty, getStagesForDifficulty } from './game/stages.js';
 import {
   UNIT_DEFS,
   GACHA_POOL,
@@ -109,7 +109,6 @@ const pvpLastAttackFlash = new Map();
 
 const SAVE_NS = 'wanko-bigwar';
 const PROFILES_KEY = `${SAVE_NS}:profiles`;
-const TOTAL_STAGE_COUNT = STAGES.length;
 
 function saveDataKey(profileId) {
   return `${SAVE_NS}:save:${profileId}`;
@@ -243,13 +242,18 @@ function applySaveData(data) {
   appState.lastGachaResult = null;
 }
 
+function countClearedInDifficulty(clearedIds, difficulty) {
+  const ids = new Set(clearedIds);
+  return getStagesForDifficulty(difficulty).filter((s) => ids.has(s.id)).length;
+}
+
 function buildSaveSummary(data) {
   const clearedOf = (id) => (data.clearedStagesByDifficulty && data.clearedStagesByDifficulty[id]) || [];
   return {
     walletCoin: data.walletCoin,
-    clearedNormal: clearedOf('normal').length,
-    clearedHard: clearedOf('hard').length,
-    clearedExtreme: clearedOf('extreme').length,
+    clearedNormal: countClearedInDifficulty(clearedOf('normal'), 'normal'),
+    clearedHard: countClearedInDifficulty(clearedOf('hard'), 'hard'),
+    clearedExtreme: countClearedInDifficulty(clearedOf('extreme'), 'extreme'),
   };
 }
 
@@ -483,9 +487,9 @@ function renderProfileList() {
         <div class="profile-card-meta">最終プレイ：${formatSaveDate(p.updatedAt || p.createdAt)}</div>
         <div class="profile-card-stats">
           <span>🪙 ${s.walletCoin}</span>
-          <span>ふつう ${s.clearedNormal}/${TOTAL_STAGE_COUNT}</span>
-          <span>むずかしい ${s.clearedHard}/${TOTAL_STAGE_COUNT}</span>
-          <span>ゲキむず ${s.clearedExtreme}/${TOTAL_STAGE_COUNT}</span>
+          <span>ふつう ${s.clearedNormal}/${getStagesForDifficulty('normal').length}</span>
+          <span>むずかしい ${s.clearedHard}/${getStagesForDifficulty('hard').length}</span>
+          <span>ゲキむず ${s.clearedExtreme}/${getStagesForDifficulty('extreme').length}</span>
         </div>
         <div class="profile-card-actions">
           <button class="btn btn--primary" type="button" data-action="continue-profile" data-profile-id="${p.id}">つづきから</button>
@@ -559,22 +563,51 @@ function buildLaneRows(enabledLayers) {
 
 // ---------- ホーム（ステージ選択） ----------
 
-function isStageUnlocked(stage) {
-  if (stage.requiresStageId) return getClearedSet().has(stage.requiresStageId);
-  if (stage.order === 0) return true;
+const LOWER_DIFFICULTY = { hard: 'normal', extreme: 'hard' };
+
+function difficultyLabel(id) {
+  const d = DIFFICULTY_LEVELS.find((x) => x.id === id);
+  return d ? d.label : '';
+}
+
+// そのステージを遊ぶために先にクリアが必要なステージ（{ stageId, difficulty }）。null なら最初から遊べる。
+//   むずかしい・ゲキむずの各章の最初のステージは、1つ下の難易度で同じ章のボス（第N章-10）を倒すと解放。
+//   それ以外は、同じ難易度の1つ前のステージ（エクストラは指定された章のボス）をクリアすると解放。
+function stageRequirement(stage, difficulty = appState.selectedDifficulty) {
+  if (stage.requiresStageId) return { stageId: stage.requiresStageId, difficulty };
+  if (stage.order === 0) return null;
+  if (stage.stageNum === 1 && LOWER_DIFFICULTY[difficulty]) {
+    return { stageId: `ch${stage.chapterNum}-10`, difficulty: LOWER_DIFFICULTY[difficulty] };
+  }
+  if (stage.stageNum > 1) return { stageId: `ch${stage.chapterNum}-${stage.stageNum - 1}`, difficulty };
   const prev = STAGES.find((s) => s.order === stage.order - 1);
-  return prev ? getClearedSet().has(prev.id) : true;
+  return prev ? { stageId: prev.id, difficulty } : null;
+}
+
+function isStageUnlocked(stage, difficulty = appState.selectedDifficulty) {
+  // 以前のルールで既にクリアしたステージは、条件が変わっても遊べるままにする
+  if (getClearedSet(difficulty).has(stage.id)) return true;
+  const req = stageRequirement(stage, difficulty);
+  return !req || getClearedSet(req.difficulty).has(req.stageId);
+}
+
+function stageUnlockHint(stage, difficulty = appState.selectedDifficulty) {
+  const req = stageRequirement(stage, difficulty);
+  if (!req) return '';
+  const reqStage = getStage(req.stageId);
+  return `「${reqStage ? reqStage.name : req.stageId}」（${difficultyLabel(req.difficulty)}）をクリアで解放`;
 }
 
 // 現在攻略中の章＝「解放済みだが未クリア」な最初のステージが属する章。
 // 全ステージクリア済みなら最後の章を返す。
 function getCurrentChapterTitle() {
-  for (const stage of STAGES) {
+  const stages = getStagesForDifficulty(appState.selectedDifficulty);
+  for (const stage of stages) {
     if (isStageUnlocked(stage) && !getClearedSet().has(stage.id)) {
       return stage.chapter;
     }
   }
-  return STAGES[STAGES.length - 1].chapter;
+  return stages[stages.length - 1].chapter;
 }
 
 function toggleChapter(chapter) {
@@ -596,7 +629,7 @@ function renderHome() {
   list.innerHTML = '';
   let lastChapter = null;
   let stageGroup = null;
-  for (const stage of STAGES) {
+  for (const stage of getStagesForDifficulty(appState.selectedDifficulty)) {
     if (stage.chapter !== lastChapter) {
       lastChapter = stage.chapter;
       const expanded = appState.expandedChapters.has(stage.chapter);
@@ -637,6 +670,7 @@ function renderHome() {
         ${cleared ? '<span class="badge badge--cleared">クリア済み</span>' : ''}
         ${unlocked ? '' : '<span class="badge badge--locked">未解放</span>'}
       </div>
+      ${unlocked ? '' : `<div class="stage-card-unlock">${stageUnlockHint(stage)}</div>`}
     `;
     if (unlocked) {
       card.addEventListener('click', () => {
@@ -863,11 +897,12 @@ function renderDifficultySelector() {
   container.innerHTML = DIFFICULTY_LEVELS.map((d) => {
     const settings = getDifficultySettings(d.id);
     const selected = appState.selectedDifficulty === d.id;
-    const clearedCount = appState.clearedStagesByDifficulty[d.id].size;
+    const clearedCount = countClearedInDifficulty(appState.clearedStagesByDifficulty[d.id], d.id);
+    const total = getStagesForDifficulty(d.id).length;
     return `<button type="button" class="difficulty-btn difficulty-btn--${d.id}${selected ? ' is-selected' : ''}" data-action="select-difficulty" data-difficulty="${d.id}">
       <span class="difficulty-label">${d.label}</span>
       <span class="difficulty-hint">報酬 x${settings.reward}</span>
-      <span class="difficulty-hint">${clearedCount}/${STAGES.length} クリア</span>
+      <span class="difficulty-hint">${clearedCount}/${total} クリア</span>
     </button>`;
   }).join('');
 }
@@ -1714,7 +1749,18 @@ function handleBattleResult(result, stage, difficulty, clearTimeMs) {
 
   let ticketGained = false;
   let weaponGained = null;
+  let bonusTickets = 0;
+  let unlockedHigher = null;
   if (result === 'win') {
+    const firstClear = !getClearedSet(difficulty).has(stage.id);
+    const higher = Object.keys(LOWER_DIFFICULTY).find((k) => LOWER_DIFFICULTY[k] === difficulty);
+    if (firstClear && stage.stageNum === 10 && higher) {
+      unlockedHigher = { chapter: stage.chapterNum, difficulty: higher };
+    }
+    if (firstClear && stage.rewardTickets) {
+      bonusTickets = stage.rewardTickets;
+      appState.gacha.tickets += bonusTickets;
+    }
     getClearedSet(difficulty).add(stage.id);
     appState.walletCoin += reward;
     if (stage.boss) {
@@ -1729,7 +1775,7 @@ function handleBattleResult(result, stage, difficulty, clearTimeMs) {
     persistCurrentProfile();
     submitRankingScore(stage.id, difficulty, clearTimeMs);
   }
-  appState.lastResult = { stageId: stage.id, result, reward, ticketGained, weaponGained, difficulty, clearTimeMs };
+  appState.lastResult = { stageId: stage.id, result, reward, ticketGained, weaponGained, bonusTickets, unlockedHigher, difficulty, clearTimeMs };
 
   setTimeout(() => {
     appState._resultHandled = false;
@@ -2096,13 +2142,14 @@ function handlePvpBattleResult(result, p1Name, p2Name) {
 // ---------- リザルト ----------
 
 // エクストラステージは章の連番とは別枠の解放条件を持つため「次のステージ」を持たない
-function getNextMainStage(stage) {
+function getNextMainStage(stage, difficulty) {
   if (stage.extra) return null;
-  return STAGES.find((s) => s.order === stage.order + 1 && !s.extra) || null;
+  const next = STAGES.find((s) => s.order === stage.order + 1 && !s.extra && isStageInDifficulty(s, difficulty));
+  return next && isStageUnlocked(next, difficulty) ? next : null;
 }
 
 function renderResult() {
-  const { result, stageId, reward, ticketGained, weaponGained, difficulty, clearTimeMs } = appState.lastResult;
+  const { result, stageId, reward, ticketGained, weaponGained, bonusTickets, unlockedHigher, difficulty, clearTimeMs } = appState.lastResult;
   const stage = getStage(stageId);
   const diffInfo = DIFFICULTY_LEVELS.find((d) => d.id === difficulty);
   const title = document.getElementById('result-title');
@@ -2124,6 +2171,12 @@ function renderResult() {
   const unlockMessages = [];
   if (ticketGained) {
     unlockMessages.push('ボス撃破報酬：わんこチケット +1（ホーム画面からガチャを引こう）');
+  }
+  if (bonusTickets) {
+    unlockMessages.push(`エクストラステージ初制覇！ボーナスでわんこチケット +${bonusTickets}`);
+  }
+  if (unlockedHigher) {
+    unlockMessages.push(`第${unlockedHigher.chapter}章（${difficultyLabel(unlockedHigher.difficulty)}）が解放された！ステージ選択画面で難易度を切り替えて挑戦しよう`);
   }
   if (weaponGained) {
     const w = CASTLE_WEAPONS.find((c) => c.id === weaponGained);
@@ -2161,7 +2214,7 @@ function renderResult() {
   }
 
   const nextBtn = document.getElementById('btn-next-stage');
-  const nextStage = result === 'win' ? getNextMainStage(stage) : null;
+  const nextStage = result === 'win' ? getNextMainStage(stage, difficulty) : null;
   if (nextStage) {
     nextBtn.hidden = false;
     nextBtn.dataset.stageId = nextStage.id;

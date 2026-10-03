@@ -1,8 +1,14 @@
 // ステージ定義
 // チュートリアル + 全10章 × 10ステージ（各章10ステージ目はボス戦）を生成する。
-// さらに、章の進行順とは別枠でエクストラステージを3つ用意する。
-// エクストラステージは特定のメインステージクリアで解放され、通常の章進行より大幅に強く
-// 調整されており、クリア報酬として自城の新しい武器が手に入る。
+// さらに、章の進行順とは別枠でエクストラステージを難易度ごとに3つずつ用意する。
+// エクストラステージは同じ難易度で特定の章のボスを倒すと解放され、通常の章進行より大幅に強く
+// 調整されている。ふつうは自城の新しい武器、むずかしい・ゲキむずはわんこチケット（初回クリアのみ）が報酬。
+//
+// 難易度ごとの章の解放（main.js の isStageUnlocked）:
+//   ふつう      : チュートリアル → 第1章 → 第2章 … と順番に進む
+//   むずかしい  : ふつうで第N章のボス（第N章-10）を倒すと、むずかしいの第N章が解放される
+//   ゲキむず    : むずかしいで第N章のボスを倒すと、ゲキむずの第N章が解放される
+//   章の中では、どの難易度でも1つ前のステージをクリアすると次が解放される
 //
 // レイヤー解放の設計:
 //   第1章-1,2   : じめんのみ
@@ -170,6 +176,7 @@ export const STAGES = [
   {
     id: 'tutorial',
     order: 0,
+    difficulty: 'normal',
     chapter: '訓練所',
     name: 'はじめての出撃',
     description: '出撃の基本を学ぶ訓練ステージ。まずはワンコウを出してみよう。',
@@ -203,6 +210,8 @@ for (const ch of CHAPTERS) {
     STAGES.push({
       id: `ch${ch.chapter}-${stageNum}`,
       order: order++,
+      chapterNum: ch.chapter,
+      stageNum,
       chapter: ch.title,
       name: `第${ch.chapter}章-${stageNum}`,
       description: isBoss
@@ -225,8 +234,10 @@ for (const ch of CHAPTERS) {
 // 指定することで、経済・敵編成の既存フォーミュラをそのまま流用しつつ
 // 「解放時点では歯が立たないレベルの強さ」を作り出す。
 const EXTRA_STAGE_DEFS = [
+  // ---- ふつう ----
   {
     id: 'extra-1',
+    difficulty: 'normal',
     name: 'エクストラ1 亡影の迷宮',
     description: '死角から忍び寄る亡影の大軍。全レイヤー同時展開に耐えられる編成でなければ突破は困難だ。',
     effectiveIndex: 55,
@@ -236,6 +247,7 @@ const EXTRA_STAGE_DEFS = [
   },
   {
     id: 'extra-2',
+    difficulty: 'normal',
     name: 'エクストラ2 混沌の竜穴',
     description: '天地を覆う混沌の竜が支配する戦場。生半可な戦力では自城に一歩も近づけない。',
     effectiveIndex: 85,
@@ -245,12 +257,75 @@ const EXTRA_STAGE_DEFS = [
   },
   {
     id: 'extra-3',
+    difficulty: 'normal',
     name: 'エクストラ3 永劫の終着点',
     description: '全10章を制した者だけが挑める真の裏ボス戦。わんこ王国最強の編成で挑め。',
     effectiveIndex: 130,
     bossId: 'true-nyan-god-eternal',
     requiresStageId: 'ch10-10',
     rewardWeaponId: 'castle-eternal-railgun',
+  },
+  // ---- むずかしい（むずかしいで第3・6・10章のボスを倒すと解放） ----
+  {
+    id: 'hard-extra-1',
+    difficulty: 'hard',
+    name: 'むずかしいEX1 嵐の古戦場',
+    description: '空と大地を同時に切り裂く嵐の騎士が待つ古戦場。そらとじめんの両方を守り切れる編成で挑め。',
+    effectiveIndex: 65,
+    bossId: 'tempest-nyan-knight',
+    requiresStageId: 'ch3-10',
+    rewardTickets: 3,
+  },
+  {
+    id: 'hard-extra-2',
+    difficulty: 'hard',
+    name: 'むずかしいEX2 深淵の海溝',
+    description: '海の底から巨大な影が浮かび上がる。じめんとうみに押し寄せる大軍を食い止めろ。',
+    effectiveIndex: 95,
+    bossId: 'abyss-nyan-leviathan',
+    requiresStageId: 'ch6-10',
+    rewardTickets: 3,
+  },
+  {
+    id: 'hard-extra-3',
+    difficulty: 'hard',
+    name: 'むずかしいEX3 創世の機神殿',
+    description: '世界を作り直そうとする機械の神が目覚めた。全レイヤーを覆い尽くす創世の砲撃に耐えよ。',
+    effectiveIndex: 135,
+    bossId: 'genesis-nyan-machine',
+    requiresStageId: 'ch10-10',
+    rewardTickets: 5,
+  },
+  // ---- ゲキむず（ゲキむずで第3・6・10章のボスを倒すと解放） ----
+  {
+    id: 'extreme-extra-1',
+    difficulty: 'extreme',
+    name: 'ゲキむずEX1 獄炎の鬼ヶ城',
+    description: '燃えさかる鬼ヶ城の主が、空からも地上からも炎を浴びせてくる。並の編成では一瞬で焼き尽くされる。',
+    effectiveIndex: 75,
+    bossId: 'inferno-nyan-oni',
+    requiresStageId: 'ch3-10',
+    rewardTickets: 5,
+  },
+  {
+    id: 'extreme-extra-2',
+    difficulty: 'extreme',
+    name: 'ゲキむずEX2 日蝕の玉座',
+    description: '太陽を喰らった女王が空と海を支配する。光の届かない戦場で最後まで立っていられるか。',
+    effectiveIndex: 105,
+    bossId: 'eclipse-nyan-queen',
+    requiresStageId: 'ch6-10',
+    rewardTickets: 5,
+  },
+  {
+    id: 'extreme-extra-3',
+    difficulty: 'extreme',
+    name: 'ゲキむずEX3 零の果て',
+    description: 'すべてが始まる前の「零」から来た神。わんこ大戦争で最も過酷な、最後の戦い。',
+    effectiveIndex: 140,
+    bossId: 'zero-nyan-origin',
+    requiresStageId: 'ch10-10',
+    rewardTickets: 10,
   },
 ];
 
@@ -271,11 +346,22 @@ for (const ex of EXTRA_STAGE_DEFS) {
     randomLayer: false,
     boss: true,
     extra: true,
+    difficulty: ex.difficulty,
     requiresStageId: ex.requiresStageId,
     rewardWeaponId: ex.rewardWeaponId,
+    rewardTickets: ex.rewardTickets,
     ...econ,
     waves,
   });
+}
+
+// その難易度のステージ選択画面に並べるステージか（difficulty 指定のないステージは全難易度に出る）
+export function isStageInDifficulty(stage, difficulty) {
+  return !stage.difficulty || stage.difficulty === difficulty;
+}
+
+export function getStagesForDifficulty(difficulty) {
+  return STAGES.filter((s) => isStageInDifficulty(s, difficulty));
 }
 
 export function getStage(id) {
