@@ -28,7 +28,7 @@ const CHAPTERS = [
     stages: [
       { place: 'ふらの', layers: ['ground'], text: 'ラベンダー畑が広がる丘で、にゃんこ軍を迎え撃て。' },
       { place: 'あさひかわ', layers: ['ground'], text: '動物園で有名な雪の街。足元を固めて守り抜け。' },
-      { place: 'にせこ', layers: ['ground', 'sky'], text: 'パウダースノーのようていざん。空からも敵が来る。' },
+      { place: 'ニセコ', layers: ['ground', 'sky'], text: 'パウダースノーのようていざん。空からも敵が来る。' },
       { place: 'のぼりべつ', layers: ['ground', 'sky'], text: '湯けむり立ちのぼるじごくだに。空の敵にも気をつけろ。' },
       { place: 'おたる', layers: ['ground', 'sea'], text: 'レンガ倉庫が並ぶ運河の街。水辺にも敵がひそむ。' },
       { place: 'はこだて', layers: ['ground', 'sky', 'sea'], text: 'はこだてやまと星形のごりょうかく。港・空・陸の三方から攻めてくる。' },
@@ -161,7 +161,7 @@ const CHAPTERS = [
       { place: 'こくら', layers: ['ground', 'sky'], text: 'こくらじょうとむらさきがわ。' },
       { place: 'やながわ', layers: ['ground', 'sea'], text: '柳の下を進む川下りの町。' },
       { place: 'くるめ', layers: ['ground'], text: 'ラーメンとつつじの町。' },
-      { place: 'ふくおかたわー', layers: ['ground', 'sky', 'sea'], text: '凍りつくはかたわんで、氷結皇ニャンフロストとの決戦！' },
+      { place: 'ふくおかタワー', layers: ['ground', 'sky', 'sea'], text: '凍りつくはかたわんで、氷結皇ニャンフロストとの決戦！' },
     ],
   },
   {
