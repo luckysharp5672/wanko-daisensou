@@ -1600,6 +1600,63 @@ button {
   margin-top: 8px;
 }
 
+.gacha-rate-table {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.gacha-rates {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-panel);
+  color: var(--color-ink);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.gacha-rates th,
+.gacha-rates td {
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.gacha-rates th {
+  background: var(--color-panel-alt);
+  color: var(--color-ink-soft);
+  font-size: 12px;
+}
+
+.gacha-rates tbody tr + tr td {
+  border-top: 1px solid var(--color-panel-alt);
+}
+
+.gacha-rates .gacha-rate-value,
+.gacha-rates .gacha-rate-per,
+.gacha-rates th:nth-child(n + 2) {
+  text-align: right;
+}
+
+.gacha-rate-value {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.gacha-rate-count,
+.gacha-rate-per {
+  color: var(--color-ink-soft);
+  font-size: 12px;
+}
+
+.gacha-rate-row--legend .gacha-rate-value {
+  color: var(--color-primary-dark);
+}
+
+.gacha-rate-row--halloween .gacha-rate-value {
+  color: var(--color-pumpkin);
+}
+
 .gacha-pool-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

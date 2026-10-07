@@ -2365,113 +2365,155 @@ export const UNIT_DEFS = [
 ];
 
 export const GACHA_POOL = [
-  // レア（9種、各6）
-  { defId: 'dachs-fighter', weight: 6 },
-  { defId: 'pome-sho', weight: 6 },
-  { defId: 'beagle-scout', weight: 6 },
-  { defId: 'shiba-ronin', weight: 6 },
-  { defId: 'poodle-mage', weight: 6 },
-  { defId: 'akita-guard', weight: 6 },
-  { defId: 'whippet-dash', weight: 6 },
-  { defId: 'labrador-diver', weight: 6 },
-  { defId: 'popart-leopard', weight: 6 },
-  // EX（8種、各7）
-  { defId: 'corgi-commander', weight: 7 },
-  { defId: 'moon-husky', weight: 7 },
-  { defId: 'cosmo-bernese', weight: 7 },
-  { defId: 'triton-hound', weight: 7 },
-  { defId: 'ragna-emperor', weight: 7 },
-  { defId: 'kirin-gunner', weight: 7 },
-  { defId: 'zebra-mage', weight: 7 },
-  { defId: 'kaba-gravity', weight: 7 },
-  // 超激レア（10種、各2）
-  { defId: 'greatdane-emperor', weight: 2 },
-  { defId: 'mastiff-titan', weight: 2 },
-  { defId: 'bordercollie-strategist', weight: 2 },
-  { defId: 'shepherd-marshal', weight: 2 },
-  { defId: 'newfoundland-admiral', weight: 2 },
-  { defId: 'pearl-yoyo-poodle', weight: 2 },
-  { defId: 'shadow-blade-cat', weight: 2 },
-  { defId: 'kamaitachi-spear', weight: 2 },
-  { defId: 'kitsune-nezumi-duo', weight: 2 },
-  { defId: 'pegasus-hybrid', weight: 2 },
-  // 伝説レア（6種、各1）
-  { defId: 'cerberus', weight: 1 },
-  { defId: 'fenrir', weight: 1 },
-  { defId: 'seiryu-inu', weight: 1 },
-  { defId: 'legend-fox-claw', weight: 1 },
-  { defId: 'cosmos-goddess', weight: 1 },
-  { defId: 'elemental-husky-god', weight: 1 },
-  // ハロウィン限定・伝説レア（10種、各1）
-  { defId: 'halloween-greatdane-emperor', weight: 1 },
-  { defId: 'halloween-mastiff-titan', weight: 1 },
-  { defId: 'halloween-bordercollie-strategist', weight: 1 },
-  { defId: 'halloween-shepherd-marshal', weight: 1 },
-  { defId: 'halloween-newfoundland-admiral', weight: 1 },
-  { defId: 'halloween-pearl-yoyo-poodle', weight: 1 },
-  { defId: 'halloween-shadow-blade-cat', weight: 1 },
-  { defId: 'halloween-kamaitachi-spear', weight: 1 },
-  { defId: 'halloween-kitsune-nezumi-duo', weight: 1 },
-  { defId: 'halloween-pegasus-hybrid', weight: 1 },
-  { defId: 'antler-sniper', weight: 2 },
-  { defId: 'cyber-fox', weight: 2 },
-  { defId: 'karakuri-cat', weight: 2 },
-  { defId: 'sonic-wolf', weight: 1 },
-  { defId: 'thunder-fox', weight: 1 },
-  { defId: 'halloween-nine-tail-lady', weight: 1 },
-  { defId: 'halloween-ghost-hound', weight: 1 },
+  // レア（9種）
+  { defId: 'dachs-fighter' },
+  { defId: 'pome-sho' },
+  { defId: 'beagle-scout' },
+  { defId: 'shiba-ronin' },
+  { defId: 'poodle-mage' },
+  { defId: 'akita-guard' },
+  { defId: 'whippet-dash' },
+  { defId: 'labrador-diver' },
+  { defId: 'popart-leopard' },
+  // EX（8種）
+  { defId: 'corgi-commander' },
+  { defId: 'moon-husky' },
+  { defId: 'cosmo-bernese' },
+  { defId: 'triton-hound' },
+  { defId: 'ragna-emperor' },
+  { defId: 'kirin-gunner' },
+  { defId: 'zebra-mage' },
+  { defId: 'kaba-gravity' },
+  // 超激レア（10種）
+  { defId: 'greatdane-emperor' },
+  { defId: 'mastiff-titan' },
+  { defId: 'bordercollie-strategist' },
+  { defId: 'shepherd-marshal' },
+  { defId: 'newfoundland-admiral' },
+  { defId: 'pearl-yoyo-poodle' },
+  { defId: 'shadow-blade-cat' },
+  { defId: 'kamaitachi-spear' },
+  { defId: 'kitsune-nezumi-duo' },
+  { defId: 'pegasus-hybrid' },
+  // 伝説レア（6種）
+  { defId: 'cerberus' },
+  { defId: 'fenrir' },
+  { defId: 'seiryu-inu' },
+  { defId: 'legend-fox-claw' },
+  { defId: 'cosmos-goddess' },
+  { defId: 'elemental-husky-god' },
+  // ハロウィン限定・伝説レア（10種）
+  { defId: 'halloween-greatdane-emperor' },
+  { defId: 'halloween-mastiff-titan' },
+  { defId: 'halloween-bordercollie-strategist' },
+  { defId: 'halloween-shepherd-marshal' },
+  { defId: 'halloween-newfoundland-admiral' },
+  { defId: 'halloween-pearl-yoyo-poodle' },
+  { defId: 'halloween-shadow-blade-cat' },
+  { defId: 'halloween-kamaitachi-spear' },
+  { defId: 'halloween-kitsune-nezumi-duo' },
+  { defId: 'halloween-pegasus-hybrid' },
+  { defId: 'antler-sniper' },
+  { defId: 'cyber-fox' },
+  { defId: 'karakuri-cat' },
+  { defId: 'sonic-wolf' },
+  { defId: 'thunder-fox' },
+  { defId: 'halloween-nine-tail-lady' },
+  { defId: 'halloween-ghost-hound' },
 ];
 
-// ハロウィンガチャ用プール：通常のガチャプールをベースに、ハロウィン限定キャラだけ
-// 出現ウェイトを大幅に引き上げる（他のキャラは通常ガチャと同じ確率のまま残す）
-const HALLOWEEN_BOOST_WEIGHT = 15;
-export const HALLOWEEN_GACHA_POOL = GACHA_POOL.map((entry) =>
-  entry.defId.startsWith('halloween-') ? { defId: entry.defId, weight: HALLOWEEN_BOOST_WEIGHT } : entry
-);
+// ハロウィンガチャ用プール：通常ガチャと同じ顔ぶれ（ハロウィン伝説レアの排出率だけ高い。GACHA_RATES 参照）
+export const HALLOWEEN_GACHA_POOL = GACHA_POOL;
 
 // メカガチャ用プール：メカキャラだけが出る（メカキャラは通常ガチャ・ハロウィンガチャには出ない）
 export const MECHA_GACHA_POOL = [
-  { defId: 'mecha-wankou', weight: 6 },
-  { defId: 'mecha-shibaruru', weight: 6 },
-  { defId: 'mecha-terrials', weight: 6 },
-  { defId: 'mecha-basset', weight: 6 },
-  { defId: 'mecha-dogimine', weight: 6 },
-  { defId: 'mecha-dachs-fighter', weight: 6 },
-  { defId: 'mecha-pome-sho', weight: 6 },
-  { defId: 'mecha-beagle-scout', weight: 6 },
-  { defId: 'mecha-akita-guard', weight: 6 },
-  { defId: 'mecha-labrador-diver', weight: 6 },
-  { defId: 'mecha-shiba-ronin', weight: 4 },
-  { defId: 'mecha-poodle-mage', weight: 4 },
-  { defId: 'mecha-whippet-dash', weight: 4 },
-  { defId: 'mecha-popart-leopard', weight: 4 },
-  { defId: 'mecha-moon-husky', weight: 4 },
-  { defId: 'mecha-triton-hound', weight: 4 },
-  { defId: 'mecha-kirin-gunner', weight: 4 },
-  { defId: 'mecha-kaba-gravity', weight: 4 },
-  { defId: 'mecha-corgi-commander', weight: 2 },
-  { defId: 'mecha-zebra-mage', weight: 2 },
-  { defId: 'mecha-ragna-emperor', weight: 2 },
-  { defId: 'mecha-mastiff-titan', weight: 2 },
-  { defId: 'mecha-newfoundland-admiral', weight: 2 },
-  { defId: 'mecha-kamaitachi-spear', weight: 2 },
-  { defId: 'mecha-pegasus-hybrid', weight: 2 },
-  { defId: 'mecha-greatdane-emperor', weight: 1 },
-  { defId: 'mecha-cerberus', weight: 1 },
-  { defId: 'mecha-fenrir', weight: 1 },
-  { defId: 'mecha-seiryu-inu', weight: 1 },
-  { defId: 'mecha-elemental-husky-god', weight: 1 },
-  { defId: 'mecha-sonic-wolf', weight: 1 },
-  { defId: 'mecha-legend-fox-claw', weight: 1 },
-  { defId: 'mecha-bordercollie-strategist', weight: 2 },
-  { defId: 'mecha-shepherd-marshal', weight: 2 },
-  { defId: 'mecha-pearl-yoyo-poodle', weight: 2 },
-  { defId: 'mecha-shadow-blade-cat', weight: 2 },
-  { defId: 'mecha-kitsune-nezumi-duo', weight: 2 },
-  { defId: 'mecha-antler-sniper', weight: 2 },
-  { defId: 'mecha-cosmos-goddess', weight: 1 },
-  { defId: 'mecha-thunder-fox', weight: 1 },
+  { defId: 'mecha-wankou' },
+  { defId: 'mecha-shibaruru' },
+  { defId: 'mecha-terrials' },
+  { defId: 'mecha-basset' },
+  { defId: 'mecha-dogimine' },
+  { defId: 'mecha-dachs-fighter' },
+  { defId: 'mecha-pome-sho' },
+  { defId: 'mecha-beagle-scout' },
+  { defId: 'mecha-akita-guard' },
+  { defId: 'mecha-labrador-diver' },
+  { defId: 'mecha-shiba-ronin' },
+  { defId: 'mecha-poodle-mage' },
+  { defId: 'mecha-whippet-dash' },
+  { defId: 'mecha-popart-leopard' },
+  { defId: 'mecha-moon-husky' },
+  { defId: 'mecha-triton-hound' },
+  { defId: 'mecha-kirin-gunner' },
+  { defId: 'mecha-kaba-gravity' },
+  { defId: 'mecha-corgi-commander' },
+  { defId: 'mecha-zebra-mage' },
+  { defId: 'mecha-ragna-emperor' },
+  { defId: 'mecha-mastiff-titan' },
+  { defId: 'mecha-newfoundland-admiral' },
+  { defId: 'mecha-kamaitachi-spear' },
+  { defId: 'mecha-pegasus-hybrid' },
+  { defId: 'mecha-greatdane-emperor' },
+  { defId: 'mecha-cerberus' },
+  { defId: 'mecha-fenrir' },
+  { defId: 'mecha-seiryu-inu' },
+  { defId: 'mecha-elemental-husky-god' },
+  { defId: 'mecha-sonic-wolf' },
+  { defId: 'mecha-legend-fox-claw' },
+  { defId: 'mecha-bordercollie-strategist' },
+  { defId: 'mecha-shepherd-marshal' },
+  { defId: 'mecha-pearl-yoyo-poodle' },
+  { defId: 'mecha-shadow-blade-cat' },
+  { defId: 'mecha-kitsune-nezumi-duo' },
+  { defId: 'mecha-antler-sniper' },
+  { defId: 'mecha-cosmos-goddess' },
+  { defId: 'mecha-thunder-fox' },
 ];
+
+// ---------- ガチャの排出率 ----------
+// まずレア度（区分）を下の排出率で抽選し、その区分のキャラの中から均等に1体を選ぶ。
+// ハロウィン限定キャラ（isHalloween）は伝説レアとは別の区分「ハロウィン伝説レア」として扱う。
+export const GACHA_CATEGORY_LABELS = {
+  rare: 'レア',
+  EX: 'EX',
+  superrare: '超激レア',
+  legend: '伝説レア',
+  halloween: 'ハロウィン伝説レア',
+};
+
+export const GACHA_RATES = {
+  normal: { rare: 45, EX: 35, superrare: 10, legend: 5, halloween: 5 },
+  halloween: { rare: 43, EX: 34, superrare: 9, legend: 4, halloween: 10 },
+  mecha: { rare: 45, EX: 35, superrare: 12, legend: 8 },
+};
+
+export function gachaCategoryOf(def) {
+  return def.isHalloween ? 'halloween' : def.rarity;
+}
+
+// 区分ごとの排出率と、その区分のキャラ1体あたりの排出率（画面表示用）
+export function gachaRateTable(mode, pool) {
+  const rates = GACHA_RATES[mode] || GACHA_RATES.normal;
+  return Object.entries(rates).map(([category, rate]) => {
+    const count = pool.filter((e) => gachaCategoryOf(getUnitDef(e.defId)) === category).length;
+    return { category, label: GACHA_CATEGORY_LABELS[category], rate, count, perUnit: count ? rate / count : 0 };
+  });
+}
+
+export function rollGacha(mode, pool, random = Math.random) {
+  const table = gachaRateTable(mode, pool).filter((r) => r.count > 0);
+  const total = table.reduce((sum, r) => sum + r.rate, 0);
+  let roll = random() * total;
+  let picked = table[table.length - 1];
+  for (const r of table) {
+    if (roll < r.rate) {
+      picked = r;
+      break;
+    }
+    roll -= r.rate;
+  }
+  const candidates = pool.filter((e) => gachaCategoryOf(getUnitDef(e.defId)) === picked.category);
+  return candidates[Math.floor(random() * candidates.length)].defId;
+}
 
 
 // ---------- 合体 ----------

@@ -5,6 +5,8 @@ import {
   GACHA_POOL,
   HALLOWEEN_GACHA_POOL,
   MECHA_GACHA_POOL,
+  rollGacha,
+  gachaRateTable,
   FUSION_RECIPES,
   FUSION_MIN_LEVEL,
   CASTLE_WEAPONS,
@@ -721,17 +723,7 @@ function pullGacha() {
   if (appState.gacha.tickets <= 0) return null;
   appState.gacha.tickets -= 1;
 
-  const pool = activeGachaPool();
-  const totalWeight = pool.reduce((sum, e) => sum + e.weight, 0);
-  let roll = Math.random() * totalWeight;
-  let pickedId = pool[pool.length - 1].defId;
-  for (const entry of pool) {
-    if (roll < entry.weight) {
-      pickedId = entry.defId;
-      break;
-    }
-    roll -= entry.weight;
-  }
+  const pickedId = rollGacha(appState.gachaMode, activeGachaPool());
 
   const def = getUnitDef(pickedId);
   const isNew = !appState.unlockedUnits.has(pickedId);
@@ -811,6 +803,23 @@ function renderGacha() {
   document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
     tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
   });
+
+  // レア度ごとの排出率
+  document.getElementById('gacha-rate-table').innerHTML = `
+    <table class="gacha-rates">
+      <thead><tr><th>レア度</th><th>排出率</th><th>1体あたり</th></tr></thead>
+      <tbody>
+        ${gachaRateTable(appState.gachaMode, activeGachaPool())
+          .map(
+            (r) => `<tr class="gacha-rate-row gacha-rate-row--${r.category}">
+          <td>${r.label}<span class="gacha-rate-count">（${r.count}体）</span></td>
+          <td class="gacha-rate-value">${r.rate}%</td>
+          <td class="gacha-rate-per">${r.perUnit.toFixed(2)}%</td>
+        </tr>`
+          )
+          .join('')}
+      </tbody>
+    </table>`;
 
   const poolList = document.getElementById('gacha-pool-list');
   poolList.innerHTML = activeGachaPool()
