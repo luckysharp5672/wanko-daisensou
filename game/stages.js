@@ -224,7 +224,7 @@ function layerLabel(layers) {
 
 function enemyPool(enabledLayers, globalIndex) {
   return ENEMY_DEFS.filter(
-    (e) => !e.boss && enabledLayers.includes(e.layer) && globalIndex >= e.minIndex
+    (e) => !e.boss && !e.eventOnly && enabledLayers.includes(e.layer) && globalIndex >= e.minIndex
   );
 }
 
@@ -453,6 +453,56 @@ for (const ex of EXTRA_STAGE_DEFS) {
     waves,
   });
 }
+
+// ---------- ハロウィンイベント（期間限定の5ステージ） ----------
+// ハロウィン仮装キャラ12体が敵として次々に出てきて、最後に伝説レアのキャラがボスとして現れる。
+// 訓練所をクリアすると1つ目が解放され、あとは順番に解放。どの難易度でも遊べる（難易度の倍率もかかる）。
+// ボスを倒すまで敵城は落ちない（bossGuard）。
+const HALLOWEEN_STAGE_DEFS = [
+  { place: 'かぼちゃばたけ', text: '満月の下、かぼちゃ畑に仮装わんこたちが現れた！最後にケルベロスが立ちはだかる。', boss: 'cerberus', statMult: 0.2, rounds: 1, effectiveIndex: 15 },
+  { place: 'おばけやしきのもり', text: 'おばけ屋敷の森で、仮装わんこたちが行く手をふさぐ。森の空からセイリュウが舞い降りる。', boss: 'seiryu-inu', statMult: 0.3, rounds: 1, effectiveIndex: 30 },
+  { place: 'まじょのみずうみ', text: '魔女のろうそくが浮かぶ湖。水面からゴッドが姿を現す。', boss: 'elemental-husky-god', statMult: 0.4, rounds: 2, effectiveIndex: 50 },
+  { place: 'ハロウィンじょうかまち', text: 'ちょうちんが揺れるハロウィンの城下町。パレードの最後にフェンリルがやってくる。', boss: 'fenrir', statMult: 0.5, rounds: 2, effectiveIndex: 70 },
+  { place: 'つきよのおばけじょう', text: '月夜のおばけ城で最終決戦！宇宙の女神ギンガが待ち受ける。', boss: 'cosmos-goddess', statMult: 0.65, rounds: 3, effectiveIndex: 90 },
+];
+
+function halloweenWaves(def) {
+  const mobs = ENEMY_DEFS.filter((e) => e.eventOnly && !e.boss);
+  const waves = [];
+  let t = 1500;
+  for (let r = 0; r < def.rounds; r++) {
+    const order = [...mobs].sort(() => Math.random() - 0.5);
+    for (const m of order) {
+      waves.push({ time: t, enemyId: m.id, count: 1, statMult: def.statMult });
+      t += 3200;
+    }
+    t += 3000;
+  }
+  waves.push({ time: t + 2000, enemyId: `hw-boss-${def.boss}`, count: 1, statMult: def.statMult });
+  return waves;
+}
+
+HALLOWEEN_STAGE_DEFS.forEach((def, i) => {
+  const n = i + 1;
+  STAGES.push({
+    id: `halloween-${n}`,
+    order: order++,
+    chapter: '🎃 ハロウィンイベント',
+    name: `ハロウィン${n} ${def.place}`,
+    place: def.place,
+    description: `${def.text}（戦場: そら・じめん・うみ）`,
+    laneLength: 1000 + def.effectiveIndex * 15,
+    enabledLayers: ALL_LAYERS,
+    boss: true,
+    event: true,
+    bossGuard: true,
+    requiresStageId: n === 1 ? 'tutorial' : `halloween-${n - 1}`,
+    rewardTickets: 2,
+    bgImage: `assets/backgrounds/halloween-${n}.jpg`,
+    ...economyFor(def.effectiveIndex, true, ALL_LAYERS),
+    waves: halloweenWaves(def),
+  });
+});
 
 // その難易度のステージ選択画面に並べるステージか（difficulty 指定のないステージは全難易度に出る）
 export function isStageInDifficulty(stage, difficulty) {

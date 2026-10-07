@@ -590,7 +590,11 @@ function difficultyLabel(id) {
 //   むずかしい・ゲキむずの各章の最初のステージは、1つ下の難易度で同じ章のボス（第N章-10）を倒すと解放。
 //   それ以外は、同じ難易度の1つ前のステージ（エクストラは指定された章のボス）をクリアすると解放。
 function stageRequirement(stage, difficulty = appState.selectedDifficulty) {
-  if (stage.requiresStageId) return { stageId: stage.requiresStageId, difficulty };
+  if (stage.requiresStageId) {
+    // 訓練所は「ふつう」にしかないので、どの難易度でも「ふつう」のクリアで判定する
+    const req = getStage(stage.requiresStageId);
+    return { stageId: stage.requiresStageId, difficulty: req && req.difficulty ? req.difficulty : difficulty };
+  }
   if (stage.order === 0) return null;
   if (stage.stageNum === 1 && LOWER_DIFFICULTY[difficulty]) {
     return { stageId: `ch${stage.chapterNum}-10`, difficulty: LOWER_DIFFICULTY[difficulty] };
@@ -612,6 +616,12 @@ function stageUnlockHint(stage, difficulty = appState.selectedDifficulty) {
   if (!req) return '';
   const reqStage = getStage(req.stageId);
   return `「${reqStage ? reqStage.name : req.stageId}」（${difficultyLabel(req.difficulty)}）をクリアで解放`;
+}
+
+// ステージ選択画面の並び順：期間限定のイベントを一番上に出して目立たせる
+function homeStageList() {
+  const stages = getStagesForDifficulty(appState.selectedDifficulty);
+  return [...stages.filter((s) => s.event), ...stages.filter((s) => !s.event)];
 }
 
 // 現在攻略中の章＝「解放済みだが未クリア」な最初のステージが属する章。
@@ -645,7 +655,7 @@ function renderHome() {
   list.innerHTML = '';
   let lastChapter = null;
   let stageGroup = null;
-  for (const stage of getStagesForDifficulty(appState.selectedDifficulty)) {
+  for (const stage of homeStageList()) {
     if (stage.chapter !== lastChapter) {
       lastChapter = stage.chapter;
       const expanded = appState.expandedChapters.has(stage.chapter);
@@ -677,7 +687,7 @@ function renderHome() {
     card.disabled = !unlocked;
     card.innerHTML = `
       <div class="stage-card-name">${stage.name}
-        ${stage.extra ? '<span class="badge badge--extra">EXTRA</span>' : stage.boss ? '<span class="badge badge--boss">BOSS</span>' : ''}
+        ${stage.event ? '<span class="badge badge--event">🎃 EVENT</span>' : stage.extra ? '<span class="badge badge--extra">EXTRA</span>' : stage.boss ? '<span class="badge badge--boss">BOSS</span>' : ''}
       </div>
       <div class="stage-card-desc">${stage.description}</div>
       <div class="stage-card-layers">${layerBadges}</div>
@@ -1644,10 +1654,13 @@ function syncUnitNode(unit) {
   if (!node) {
     node = document.createElement('div');
     node.className = `lane-unit lane-unit--${unit.side}`;
+    // ハロウィンイベントの敵はプレイヤー側のキャラの画像を左右反転して使う（敵は画面の左から右へ進むため）
     const glyph =
       unit.side === 'ally'
         ? `<img class="icon-glyph" src="${getBattleImage(unit.defId)}" alt="">`
-        : `<span class="icon-glyph">${unit.icon}</span>`;
+        : unit.imageDefId
+          ? `<img class="icon-glyph is-mirrored" src="${getBattleImage(unit.imageDefId)}" alt="">`
+          : `<span class="icon-glyph">${unit.icon}</span>`;
     node.innerHTML = `
       <div class="lane-unit-hp"><div class="lane-unit-hp-fill"></div></div>
       <div class="lane-unit-icon">${glyph}</div>
@@ -2160,7 +2173,9 @@ function handlePvpBattleResult(result, p1Name, p2Name) {
 // エクストラステージは章の連番とは別枠の解放条件を持つため「次のステージ」を持たない
 function getNextMainStage(stage, difficulty) {
   if (stage.extra) return null;
-  const next = STAGES.find((s) => s.order === stage.order + 1 && !s.extra && isStageInDifficulty(s, difficulty));
+  const next = STAGES.find(
+    (s) => s.order === stage.order + 1 && !s.extra && !!s.event === !!stage.event && isStageInDifficulty(s, difficulty)
+  );
   return next && isStageUnlocked(next, difficulty) ? next : null;
 }
 

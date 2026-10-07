@@ -191,6 +191,11 @@ button {
   color: #cbb89a;
 }
 
+.badge--event {
+  background: var(--color-pumpkin);
+  color: #fff8ec;
+}
+
 .badge--extra {
   background: linear-gradient(135deg, #7a2fb5, #c8443a);
   color: #fff8ec;
@@ -2016,6 +2021,16 @@ img.icon-glyph {
   font-size: 68px;
 }
 
+/* 画像で表示するボス（ハロウィンイベント）は通常キャラの1.5倍 */
+.lane-unit.is-boss img.icon-glyph {
+  width: 102px;
+  height: 102px;
+}
+
+.icon-glyph.is-mirrored {
+  transform: scaleX(-1);
+}
+
 .lane-unit.is-boss.is-multilayer {
   z-index: 3;
 }
@@ -2571,5 +2586,10 @@ img.icon-glyph {
   img.icon-glyph {
     width: 50px;
     height: 50px;
+  }
+
+  .lane-unit.is-boss img.icon-glyph {
+    width: 75px;
+    height: 75px;
   }
 }

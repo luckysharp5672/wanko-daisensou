@@ -2,6 +2,8 @@
 // layer: 出現する層（sky=そら / ground=じめん / sea=うみ）
 // minIndex: 出現しうる最小の通し進行度（tutorial=0, 第1章-1=1 ... 第5章-10=50）
 
+import { UNIT_DEFS } from './units.js';
+
 export const ENEMY_DEFS = [
   {
     id: 'noranyan',
@@ -472,6 +474,37 @@ export const ENEMY_DEFS = [
   },
 ];
 
+// ---- ハロウィンイベント専用の敵（通常の章・エクストラには出ない） ----
+// プレイヤー側のハロウィン仮装キャラ12体がそのまま敵として出てくる（画像も同じものを左右反転して使う）。
+// ボスは伝説レアのキャラ。ステージごとの強さは waves の statMult で調整する。
+export const HALLOWEEN_EVENT_BOSS_UNIT_IDS = ['cerberus', 'seiryu-inu', 'elemental-husky-god', 'fenrir', 'cosmos-goddess'];
+
+function enemyFromUnit(unit, boss) {
+  return {
+    id: `${boss ? 'hw-boss' : 'hw'}-${unit.id}`,
+    name: unit.name,
+    attribute: boss ? 'boss' : 'none',
+    icon: unit.icon,
+    imageDefId: unit.id,
+    layer: unit.layer,
+    minIndex: Infinity,
+    eventOnly: true,
+    hp: boss ? unit.hp * 10 : unit.hp,
+    atk: boss ? Math.round(unit.atk * 1.4) : unit.atk,
+    atkInterval: unit.atkInterval,
+    range: unit.range,
+    speed: boss ? Math.round(unit.speed * 0.6) : unit.speed,
+    kb: boss ? 12 : unit.kb,
+    reward: boss ? 1500 : Math.round(unit.cost / 3),
+    boss,
+  };
+}
+
+ENEMY_DEFS.push(
+  ...UNIT_DEFS.filter((u) => u.isHalloween).map((u) => enemyFromUnit(u, false)),
+  ...HALLOWEEN_EVENT_BOSS_UNIT_IDS.map((id) => enemyFromUnit(UNIT_DEFS.find((u) => u.id === id), true))
+);
+
 export function getEnemyDef(id) {
   return ENEMY_DEFS.find((e) => e.id === id);
 }
@@ -488,6 +521,7 @@ export function spawnEnemy(defId, x, statMult = 1) {
     side: 'enemy',
     name: def.name,
     icon: def.icon,
+    imageDefId: def.imageDefId,
     layer: def.layer,
     layers: def.layers,
     attribute: def.attribute,

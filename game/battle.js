@@ -18,7 +18,7 @@ function flattenWaves(waves) {
     const count = wave.count || 1;
     const interval = wave.interval || 0;
     for (let i = 0; i < count; i++) {
-      events.push({ time: wave.time + i * interval, enemyId: wave.enemyId });
+      events.push({ time: wave.time + i * interval, enemyId: wave.enemyId, statMult: wave.statMult || 1 });
     }
   }
   events.sort((a, b) => a.time - b.time);
@@ -140,6 +140,7 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
 
   const onEnemyKilled = (killed) => {
     state.coin = Math.min(state.maxCoin, state.coin + killed.reward);
+    if (killed.boss) state.bossDefeated = true;
   };
 
   function update(dt) {
@@ -150,7 +151,7 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
       const ev = state.spawnQueue.shift();
       const def = getEnemyDef(ev.enemyId);
       if (!getLayers(def).some((l) => state.enabledLayers.includes(l))) continue;
-      state.enemies.push(spawnEnemy(ev.enemyId, state.laneLength - 20, diff.enemyStat));
+      state.enemies.push(spawnEnemy(ev.enemyId, state.laneLength - 20, diff.enemyStat * ev.statMult));
     }
 
     state.coin = Math.min(state.maxCoin, state.coin + (state.coinRegen * dt) / 1000);
@@ -196,6 +197,9 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
 
     state.allies = state.allies.filter((u) => !u.dead);
     state.enemies = state.enemies.filter((u) => !u.dead);
+
+    // ボスガードのあるステージ（ハロウィンイベント）は、ボスを倒すまで敵城のHPが1より下がらない
+    if (stage.bossGuard && !state.bossDefeated && state.enemyHp < 1) state.enemyHp = 1;
 
     if (state.enemyHp <= 0) {
       state.enemyHp = 0;
@@ -246,6 +250,7 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
       enabledLayers: state.enabledLayers,
       difficulty: state.difficulty,
       result: state.result,
+      bossGuarded: !!stage.bossGuard && !state.bossDefeated,
       stage,
       allies: state.allies.map((u) => ({ ...u })),
       enemies: state.enemies.map((u) => ({ ...u })),
