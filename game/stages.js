@@ -457,7 +457,6 @@ for (const ex of EXTRA_STAGE_DEFS) {
 // ---------- ハロウィンイベント（期間限定の5ステージ） ----------
 // ハロウィン仮装キャラ12体が敵として次々に出てきて、最後に伝説レアのキャラがボスとして現れる。
 // 訓練所をクリアすると1つ目が解放され、あとは順番に解放。どの難易度でも遊べる（難易度の倍率もかかる）。
-// ボスを倒すまで敵城は落ちない（bossGuard）。
 const HALLOWEEN_STAGE_DEFS = [
   { place: 'かぼちゃばたけ', text: '満月の下、かぼちゃ畑に仮装わんこたちが現れた！最後にケルベロスが立ちはだかる。', boss: 'cerberus', statMult: 0.2, rounds: 1, effectiveIndex: 15 },
   { place: 'おばけやしきのもり', text: 'おばけ屋敷の森で、仮装わんこたちが行く手をふさぐ。森の空からセイリュウが舞い降りる。', boss: 'seiryu-inu', statMult: 0.3, rounds: 1, effectiveIndex: 30 },
@@ -495,7 +494,6 @@ HALLOWEEN_STAGE_DEFS.forEach((def, i) => {
     enabledLayers: ALL_LAYERS,
     boss: true,
     event: true,
-    bossGuard: true,
     requiresStageId: n === 1 ? 'tutorial' : `halloween-${n - 1}`,
     rewardTickets: 2,
     bgImage: `assets/backgrounds/halloween-${n}.jpg`,

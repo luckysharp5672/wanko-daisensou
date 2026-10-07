@@ -137,10 +137,15 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
     })),
     result: null,
   };
+  // このステージで出てくるボスの数（有効なレイヤーで出撃できるものだけ数える）
+  state.bossesRemaining = state.spawnQueue.filter((ev) => {
+    const def = getEnemyDef(ev.enemyId);
+    return def && def.boss && getLayers(def).some((l) => state.enabledLayers.includes(l));
+  }).length;
 
   const onEnemyKilled = (killed) => {
     state.coin = Math.min(state.maxCoin, state.coin + killed.reward);
-    if (killed.boss) state.bossDefeated = true;
+    if (killed.boss) state.bossesRemaining = Math.max(0, state.bossesRemaining - 1);
   };
 
   function update(dt) {
@@ -198,8 +203,8 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
     state.allies = state.allies.filter((u) => !u.dead);
     state.enemies = state.enemies.filter((u) => !u.dead);
 
-    // ボスガードのあるステージ（ハロウィンイベント）は、ボスを倒すまで敵城のHPが1より下がらない
-    if (stage.bossGuard && !state.bossDefeated && state.enemyHp < 1) state.enemyHp = 1;
+    // ボスが出るステージは、ボスを全部倒すまで敵城のHPが1より下がらない（敵城を先に落として終わらせない）
+    if (state.bossesRemaining > 0 && state.enemyHp < 1) state.enemyHp = 1;
 
     if (state.enemyHp <= 0) {
       state.enemyHp = 0;
@@ -250,7 +255,7 @@ export function createBattle(stageId, formation, levels = {}, difficulty = 'norm
       enabledLayers: state.enabledLayers,
       difficulty: state.difficulty,
       result: state.result,
-      bossGuarded: !!stage.bossGuard && !state.bossDefeated,
+      bossGuarded: state.bossesRemaining > 0,
       stage,
       allies: state.allies.map((u) => ({ ...u })),
       enemies: state.enemies.map((u) => ({ ...u })),
