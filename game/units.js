@@ -2481,9 +2481,9 @@ export const GACHA_CATEGORY_LABELS = {
 };
 
 export const GACHA_RATES = {
-  normal: { rare: 45, EX: 35, superrare: 10, legend: 5, halloween: 5 },
-  halloween: { rare: 43, EX: 34, superrare: 9, legend: 4, halloween: 10 },
-  mecha: { rare: 45, EX: 35, superrare: 12, legend: 8 },
+  normal: { rare: 60, EX: 20, superrare: 10, legend: 6, halloween: 4 },
+  halloween: { rare: 60, EX: 20, superrare: 10, legend: 6, halloween: 4 },
+  mecha: { rare: 60, EX: 20, superrare: 12, legend: 8 },
 };
 
 export function gachaCategoryOf(def) {
