@@ -515,6 +515,21 @@ export function getStage(id) {
   return STAGES.find((s) => s.id === id);
 }
 
+// そのステージの waves に登場する敵の定義を、重複なく初登場順で返す（雑魚が先、ボスは最後）。
+// 敵図鑑（ステージ選択画面の「👾 敵図鑑」）で使う。
+export function getStageEnemies(stage) {
+  const seen = new Set();
+  const list = [];
+  for (const wave of stage.waves || []) {
+    if (seen.has(wave.enemyId)) continue;
+    seen.add(wave.enemyId);
+    const def = ENEMY_DEFS.find((e) => e.id === wave.enemyId);
+    if (def) list.push(def);
+  }
+  list.sort((a, b) => (a.boss === b.boss ? 0 : a.boss ? 1 : -1));
+  return list;
+}
+
 export function getStageIndex(id) {
   return STAGES.findIndex((s) => s.id === id);
 }

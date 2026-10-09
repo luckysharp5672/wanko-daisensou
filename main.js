@@ -1,5 +1,5 @@
 import { createLoop } from './game/engine.js';
-import { STAGES, getStage, isStageInDifficulty, getStagesForDifficulty } from './game/stages.js';
+import { STAGES, getStage, isStageInDifficulty, getStagesForDifficulty, getStageEnemies } from './game/stages.js';
 import {
   UNIT_DEFS,
   GACHA_POOL,
@@ -683,6 +683,9 @@ function renderHome() {
       .map((l) => `<span class="mini-badge">${LAYER_INFO[l].label}</span>`)
       .join('');
 
+    const cardWrap = document.createElement('div');
+    cardWrap.className = 'stage-card-wrap';
+
     const card = document.createElement('button');
     card.className = 'stage-card' + (unlocked ? '' : ' is-locked') + (cleared ? ' is-cleared' : '');
     card.type = 'button';
@@ -707,8 +710,47 @@ function renderHome() {
         playPrepMusic();
       });
     }
-    stageGroup.appendChild(card);
+
+    const enemiesBtn = document.createElement('button');
+    enemiesBtn.type = 'button';
+    enemiesBtn.className = 'stage-card-enemies-btn';
+    enemiesBtn.textContent = '👾 敵図鑑';
+    enemiesBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      renderStageEnemies(stage);
+      showScreen('stage-enemies');
+    });
+
+    cardWrap.appendChild(card);
+    cardWrap.appendChild(enemiesBtn);
+    stageGroup.appendChild(cardWrap);
   }
+}
+
+// ---------- 敵図鑑（ステージごとの出現敵一覧） ----------
+
+function renderStageEnemies(stage) {
+  document.getElementById('stage-enemies-stage-name').textContent = `${stage.name} に登場する敵`;
+  const enemies = getStageEnemies(stage);
+  const list = document.getElementById('stage-enemies-list');
+  if (enemies.length === 0) {
+    list.innerHTML = '<p class="stage-enemies-empty">このステージには敵が出現しません。</p>';
+    return;
+  }
+  list.innerHTML = enemies
+    .map((def) => {
+      const portrait = def.imageDefId
+        ? `<img class="stage-enemy-img" src="${getBattleImage(def.imageDefId)}" alt="">`
+        : `<span class="stage-enemy-icon">${def.icon}</span>`;
+      return `<div class="stage-enemy-card${def.boss ? ' is-boss' : ''}">
+        <div class="stage-enemy-portrait">${portrait}</div>
+        <div class="stage-enemy-info">
+          <div class="stage-enemy-name">${def.name}${def.boss ? '<span class="badge badge--boss">BOSS</span>' : ''}</div>
+          <p class="stage-enemy-desc">${def.desc || ''}</p>
+        </div>
+      </div>`;
+    })
+    .join('');
 }
 
 // ---------- ガチャ ----------
