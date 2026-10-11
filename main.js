@@ -364,13 +364,69 @@ function exportProfile(id) {
   return encodeSaveCode(profile.name, data);
 }
 
-function showExportResult(code) {
+function showExportResult(code, profileId) {
   const panel = document.getElementById('export-result-panel');
   const textEl = document.getElementById('export-result-text');
   if (!panel || !textEl) return;
   textEl.value = code;
+  panel.dataset.profileId = profileId || '';
   panel.hidden = false;
+  const keyInput = document.getElementById('cloud-save-key-input');
+  if (keyInput) keyInput.value = randomSaveCodeKey();
+  const statusEl = document.getElementById('cloud-save-status');
+  if (statusEl) {
+    statusEl.textContent = '';
+    statusEl.className = 'cloud-sync-status';
+  }
+  updateCloudSyncUi();
   panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ---------- クラウドで引き継ぎコードを保存・読み込み（Googleスプレッドシート + GAS） ----------
+// 上の「引き継ぎコード」を手でコピー/貼り付けする代わりに、短い「合言葉」をキーにして
+// Googleスプレッドシートへ保存・読み込みできるようにする（GAS = Google Apps Script 経由）。
+// GAS_SAVE_CODE_API_BASE が空のままならクラウド機能は使えず、今までどおりコードを手でコピー/
+// ダウンロードする方法のみ使える。セットアップ手順は web/backend-gas/README.md を参照。
+// 上の「クラウド同期・ランキング（Cloudflare Workers + D1）」とは別の、無関係な独立した仕組み。
+const GAS_SAVE_CODE_API_BASE = ''; // 例: 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec'
+
+function isGasSaveCodeEnabled() {
+  return Boolean(GAS_SAVE_CODE_API_BASE);
+}
+
+function randomSaveCodeKey() {
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6桁の数字
+}
+
+async function cloudSaveCode(key, name, code) {
+  const res = await fetch(GAS_SAVE_CODE_API_BASE, {
+    method: 'POST',
+    // text/plain にするとブラウザがプリフライト(OPTIONS)リクエストを送らず、GASのdoPostにそのまま届く
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ key, name, code }),
+  });
+  const body = await res.json();
+  if (!body.ok) throw new Error(body.error || 'save failed');
+  return body;
+}
+
+async function cloudLoadCode(key) {
+  const res = await fetch(`${GAS_SAVE_CODE_API_BASE}?key=${encodeURIComponent(key)}`);
+  const body = await res.json();
+  if (!body.ok) throw new Error(body.error || 'load failed');
+  return body; // { ok, key, name, code, updatedAt }
+}
+
+function updateCloudSyncUi() {
+  const enabled = isGasSaveCodeEnabled();
+  const savePanel = document.getElementById('cloud-save-panel');
+  const saveHint = document.getElementById('cloud-save-disabled-hint');
+  if (savePanel) savePanel.hidden = !enabled;
+  if (saveHint) saveHint.hidden = enabled;
+  const loadForm = document.getElementById('cloud-load-form');
+  const loadHint = document.getElementById('cloud-load-disabled-hint');
+  if (loadForm) loadForm.hidden = !enabled;
+  if (loadHint) loadHint.hidden = enabled;
 }
 
 function importSaveCode(code) {
@@ -475,6 +531,7 @@ function escapeHtml(str) {
 }
 
 function renderProfileList() {
+  updateCloudSyncUi();
   const list = document.getElementById('profile-list');
   const profiles = listProfiles().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   if (profiles.length === 0) {
@@ -2365,7 +2422,31 @@ app.addEventListener('click', (e) => {
       alert('エクスポートに失敗しました。');
       return;
     }
-    showExportResult(code);
+    showExportResult(code, id);
+  } else if (action === 'cloud-save-code') {
+    const panel = document.getElementById('export-result-panel');
+    const profileId = panel.dataset.profileId;
+    const profile = listProfiles().find((p) => p.id === profileId);
+    const keyInput = document.getElementById('cloud-save-key-input');
+    const key = keyInput.value.trim();
+    const statusEl = document.getElementById('cloud-save-status');
+    const code = document.getElementById('export-result-text').value;
+    if (!key) {
+      statusEl.textContent = '合言葉を入力してください。';
+      statusEl.className = 'cloud-sync-status is-error';
+      return;
+    }
+    statusEl.textContent = '保存中…';
+    statusEl.className = 'cloud-sync-status';
+    cloudSaveCode(key, profile ? profile.name : '', code)
+      .then(() => {
+        statusEl.textContent = `合言葉「${key}」でクラウドに保存しました。`;
+        statusEl.className = 'cloud-sync-status is-success';
+      })
+      .catch(() => {
+        statusEl.textContent = '保存に失敗しました。通信環境を確認してもう一度お試しください。';
+        statusEl.className = 'cloud-sync-status is-error';
+      });
   } else if (action === 'copy-export-code') {
     const textEl = document.getElementById('export-result-text');
     textEl.select();
@@ -2512,6 +2593,25 @@ document.getElementById('import-form').addEventListener('submit', (e) => {
   importSaveCode(code);
   input.value = '';
   document.getElementById('import-file-input').value = '';
+});
+
+document.getElementById('cloud-load-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('cloud-load-key-input');
+  const key = input.value.trim();
+  const statusEl = document.getElementById('cloud-load-status');
+  if (!key) return;
+  statusEl.textContent = '読み込み中…';
+  statusEl.className = 'cloud-sync-status';
+  cloudLoadCode(key)
+    .then((body) => {
+      input.value = '';
+      importSaveCode(body.code);
+    })
+    .catch(() => {
+      statusEl.textContent = 'その合言葉のセーブデータが見つかりませんでした。';
+      statusEl.className = 'cloud-sync-status is-error';
+    });
 });
 
 document.getElementById('roster-filter-layer').addEventListener('change', (e) => {
