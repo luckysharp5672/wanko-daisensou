@@ -392,7 +392,7 @@ function showExportResult(code, profileId) {
 // ダウンロードする方法のみ使える。セットアップ手順は web/backend-gas/README.md を参照。
 // 上の「クラウド同期・ランキング（Cloudflare Workers + D1）」とは別の、無関係な独立した仕組み。
 // 同じプレイヤー名で保存すると上書きされる（端末をまたいで同じ名前を使う前提）。
-const GAS_SAVE_CODE_API_BASE = ''; // 例: 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec'
+const GAS_SAVE_CODE_API_BASE = 'https://script.google.com/macros/s/AKfycbzB0sipP3cSmNbdwMTbIafyYzcB2Z8jfc41e46u4dYYE3S1um1IyqRGb-vCU55ruQXlKA/exec'; // 例: 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec'
 
 function isGasSaveCodeEnabled() {
   return Boolean(GAS_SAVE_CODE_API_BASE);
