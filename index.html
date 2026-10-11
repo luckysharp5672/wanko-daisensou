@@ -47,15 +47,15 @@
       </div>
 
       <div class="cloud-sync-panel" id="cloud-save-panel" hidden>
-        <h4 class="cloud-sync-title">☁️ 合言葉でクラウドに保存</h4>
-        <p class="cloud-sync-hint">合言葉を決めて保存すると、別の端末で同じ合言葉を入力するだけで引き継げます（コードを手でコピーする必要がありません）。</p>
+        <h4 class="cloud-sync-title">☁️ この名前でクラウドに保存</h4>
+        <p class="cloud-sync-hint">別の端末で同じプレイヤー名を入力するだけで引き継げます（コードを手でコピーする必要がありません）。同じ名前で保存すると上書きされます。</p>
         <div class="cloud-sync-form">
-          <input type="text" id="cloud-save-key-input" class="cloud-sync-input" maxlength="20" placeholder="合言葉（例：123456）">
+          <input type="text" id="cloud-save-key-input" class="cloud-sync-input" maxlength="20" readonly>
           <button class="btn btn--primary" type="button" data-action="cloud-save-code">クラウドに保存</button>
         </div>
         <p class="cloud-sync-status" id="cloud-save-status"></p>
       </div>
-      <p class="cloud-sync-disabled-hint" id="cloud-save-disabled-hint" hidden>☁️ 合言葉でのクラウド保存は未設定です（web/backend-gas/README.md を参照）。</p>
+      <p class="cloud-sync-disabled-hint" id="cloud-save-disabled-hint" hidden>☁️ プレイヤー名でのクラウド保存は未設定です（web/backend-gas/README.md を参照）。</p>
     </div>
 
     <div class="profile-new-panel">
@@ -81,15 +81,15 @@
     </div>
 
     <div class="profile-new-panel">
-      <h3 class="panel-title">☁️ 合言葉でクラウドから読み込む</h3>
+      <h3 class="panel-title">☁️ プレイヤー名でクラウドから読み込む</h3>
       <form class="import-form" id="cloud-load-form" hidden>
         <div class="import-form-actions">
-          <input type="text" id="cloud-load-key-input" class="profile-new-input" maxlength="20" placeholder="合言葉を入力">
+          <input type="text" id="cloud-load-key-input" class="profile-new-input" maxlength="20" placeholder="プレイヤー名を入力（例：たろう）">
           <button type="submit" class="btn btn--primary">読み込む</button>
         </div>
         <p class="cloud-sync-status" id="cloud-load-status"></p>
       </form>
-      <p class="cloud-sync-disabled-hint" id="cloud-load-disabled-hint" hidden>☁️ 合言葉でのクラウド読み込みは未設定です（web/backend-gas/README.md を参照）。</p>
+      <p class="cloud-sync-disabled-hint" id="cloud-load-disabled-hint" hidden>☁️ プレイヤー名でのクラウド読み込みは未設定です（web/backend-gas/README.md を参照）。</p>
     </div>
   </section>
 

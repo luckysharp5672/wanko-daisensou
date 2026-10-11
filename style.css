@@ -470,6 +470,11 @@ button {
   border-color: var(--color-accent);
 }
 
+.cloud-sync-input:read-only {
+  opacity: 0.8;
+  cursor: default;
+}
+
 .cloud-sync-status {
   margin: 8px 0 0;
   font-size: 12px;

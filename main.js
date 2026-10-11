@@ -372,7 +372,10 @@ function showExportResult(code, profileId) {
   panel.dataset.profileId = profileId || '';
   panel.hidden = false;
   const keyInput = document.getElementById('cloud-save-key-input');
-  if (keyInput) keyInput.value = randomSaveCodeKey();
+  if (keyInput) {
+    const profile = listProfiles().find((p) => p.id === profileId);
+    keyInput.value = profile ? profile.name : '';
+  }
   const statusEl = document.getElementById('cloud-save-status');
   if (statusEl) {
     statusEl.textContent = '';
@@ -383,19 +386,16 @@ function showExportResult(code, profileId) {
 }
 
 // ---------- クラウドで引き継ぎコードを保存・読み込み（Googleスプレッドシート + GAS） ----------
-// 上の「引き継ぎコード」を手でコピー/貼り付けする代わりに、短い「合言葉」をキーにして
+// 上の「引き継ぎコード」を手でコピー/貼り付けする代わりに、プレイヤー名をキーにして
 // Googleスプレッドシートへ保存・読み込みできるようにする（GAS = Google Apps Script 経由）。
 // GAS_SAVE_CODE_API_BASE が空のままならクラウド機能は使えず、今までどおりコードを手でコピー/
 // ダウンロードする方法のみ使える。セットアップ手順は web/backend-gas/README.md を参照。
 // 上の「クラウド同期・ランキング（Cloudflare Workers + D1）」とは別の、無関係な独立した仕組み。
+// 同じプレイヤー名で保存すると上書きされる（端末をまたいで同じ名前を使う前提）。
 const GAS_SAVE_CODE_API_BASE = ''; // 例: 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec'
 
 function isGasSaveCodeEnabled() {
   return Boolean(GAS_SAVE_CODE_API_BASE);
-}
-
-function randomSaveCodeKey() {
-  return String(Math.floor(100000 + Math.random() * 900000)); // 6桁の数字
 }
 
 async function cloudSaveCode(key, name, code) {
@@ -2432,7 +2432,7 @@ app.addEventListener('click', (e) => {
     const statusEl = document.getElementById('cloud-save-status');
     const code = document.getElementById('export-result-text').value;
     if (!key) {
-      statusEl.textContent = '合言葉を入力してください。';
+      statusEl.textContent = 'プレイヤー名が空です。';
       statusEl.className = 'cloud-sync-status is-error';
       return;
     }
@@ -2440,7 +2440,7 @@ app.addEventListener('click', (e) => {
     statusEl.className = 'cloud-sync-status';
     cloudSaveCode(key, profile ? profile.name : '', code)
       .then(() => {
-        statusEl.textContent = `合言葉「${key}」でクラウドに保存しました。`;
+        statusEl.textContent = `「${key}」としてクラウドに保存しました。`;
         statusEl.className = 'cloud-sync-status is-success';
       })
       .catch(() => {
@@ -2609,7 +2609,7 @@ document.getElementById('cloud-load-form').addEventListener('submit', (e) => {
       importSaveCode(body.code);
     })
     .catch(() => {
-      statusEl.textContent = 'その合言葉のセーブデータが見つかりませんでした。';
+      statusEl.textContent = 'そのプレイヤー名のセーブデータが見つかりませんでした。';
       statusEl.className = 'cloud-sync-status is-error';
     });
 });
