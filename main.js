@@ -29,6 +29,7 @@ import {
 } from './game/units.js';
 import { createBattle, createPvpBattle } from './game/battle.js';
 import { hasSprites, getSpriteFrame, pickPose, preloadSprites, disableSprites } from './game/sprites.js';
+import { attackStyleOf, STYLE_FX } from './game/motion.js';
 import { LAYER_IDS, LAYER_INFO } from './game/layers.js';
 import { DIFFICULTY_LEVELS, getDifficultySettings } from './game/difficulty.js';
 import {
@@ -1766,14 +1767,6 @@ function layerTopPercent(unit) {
 // ---------- バトルのエフェクト（攻撃・被弾・撃破） ----------
 // エフェクトは % 座標で置く小さな要素で、CSS アニメーションが終わると自分で消える。
 const MAX_LANE_EFFECTS = 40;
-// 基本5キャラの攻撃エフェクト。melee は標的の位置に出す、projectile は標的まで飛ばして着弾で impact を出す
-const ATTACK_FX = {
-  wankou: { melee: 'fx-bash' },
-  shibaruru: { melee: 'fx-quake' },
-  terrials: { melee: 'fx-claw' },
-  basset: { projectile: 'fx-bolt', impact: 'fx-burst' },
-  dogimine: { projectile: 'fx-arrow', impact: 'fx-sparkle' },
-};
 
 function spawnLaneEffect(layerId, className, left, top, vars = {}) {
   const layer = document.getElementById(layerId);
@@ -1796,7 +1789,7 @@ function nodePos(node) {
 
 // xToPct: 内部座標 x を画面の % に変える関数（通常バトルと対戦で左右が逆）
 function emitAttackFx(unit, node, nodes, layerId, xToPct) {
-  const fx = ATTACK_FX[unit.defId];
+  const fx = STYLE_FX[attackStyleOf(unit.defId)];
   if (!fx || unit.side === 'enemy') return;
   const from = nodePos(node);
   const targetNode = unit.lastTargetUid ? nodes.get(unit.lastTargetUid) : null;
@@ -1891,6 +1884,7 @@ function syncUnitNode(unit) {
     `;
     node.dataset.def = unit.defId;
     node.dataset.layer = unit.layer || '';
+    if (unit.side === 'ally') node.dataset.attack = attackStyleOf(unit.defId);
     // 相手に向かう向き（画面の左右）。動きの向きをそろえるのに使う
     node.style.setProperty('--face', unit.side === 'ally' ? -1 : 1);
     document.getElementById('lane-units').appendChild(node);
@@ -2329,6 +2323,7 @@ function syncPvpUnitNode(unit, laneLength) {
     `;
     node.dataset.def = unit.defId;
     node.dataset.layer = unit.layer || '';
+    node.dataset.attack = attackStyleOf(unit.defId);
     node.style.setProperty('--face', unit.owner === 'p1' ? 1 : -1);
     document.getElementById('vs-lane-units').appendChild(node);
     pvpLaneUnitNodes.set(unit.uid, node);

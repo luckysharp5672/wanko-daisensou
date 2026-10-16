@@ -2351,8 +2351,8 @@ img.icon-glyph {
   }
 }
 
-/* ワンコウ：盾で体当たり（深く突っ込んで戻る） */
-.lane-unit[data-def='wankou'].is-attacking .lane-unit-icon {
+/* 体当たり：バランス型。深く突っ込んで戻る */
+.lane-unit[data-attack='bash'].is-attacking .lane-unit-icon {
   animation: atk-bash 0.3s cubic-bezier(0.3, 1.5, 0.4, 1);
 }
 
@@ -2371,8 +2371,8 @@ img.icon-glyph {
   }
 }
 
-/* シバルル：全体重をのせて踏みつける */
-.lane-unit[data-def='shibaruru'].is-attacking .lane-unit-icon {
+/* 踏みつけ：壁役・重装。全体重をのせる */
+.lane-unit[data-attack='stomp'].is-attacking .lane-unit-icon {
   animation: atk-stomp 0.38s ease-out;
 }
 
@@ -2394,8 +2394,8 @@ img.icon-glyph {
   }
 }
 
-/* テリアルス：素早く一回転して切りつける */
-.lane-unit[data-def='terrials'].is-attacking .lane-unit-icon {
+/* 回転斬り：高速・遊撃。素早く一回転する */
+.lane-unit[data-attack='spin'].is-attacking .lane-unit-icon {
   animation: atk-spin 0.3s ease-in-out;
 }
 
@@ -2411,8 +2411,8 @@ img.icon-glyph {
   }
 }
 
-/* バセット：撃った反動で後ろへのけぞる */
-.lane-unit[data-def='basset'].is-attacking .lane-unit-icon {
+/* 反動：砲撃・狙撃。撃った反動で後ろへのけぞる */
+.lane-unit[data-attack='recoil'].is-attacking .lane-unit-icon {
   animation: atk-recoil 0.36s ease-out;
 }
 
@@ -2431,8 +2431,8 @@ img.icon-glyph {
   }
 }
 
-/* ドギミネ：弓を引きしぼって放つ */
-.lane-unit[data-def='dogimine'].is-attacking .lane-unit-icon {
+/* 弓：射手。引きしぼって放つ */
+.lane-unit[data-attack='draw'].is-attacking .lane-unit-icon {
   animation: atk-draw 0.42s ease-out;
 }
 
@@ -2448,6 +2448,224 @@ img.icon-glyph {
   }
   100% {
     transform: translateX(0) rotate(0) scale(1);
+  }
+}
+
+/* 刀：剣士。大きく振りかぶって一刀両断 */
+.lane-unit[data-attack='slash'].is-attacking .lane-unit-icon {
+  animation: atk-slash 0.34s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes atk-slash {
+  0% {
+    transform: translate(calc(var(--face) * -10px), -8px) rotate(calc(var(--face) * -28deg));
+  }
+  35% {
+    transform: translate(calc(var(--face) * 18px), 4px) rotate(calc(var(--face) * 26deg)) scale(1.14);
+  }
+  62% {
+    transform: translate(calc(var(--face) * 4px), 0) rotate(calc(var(--face) * -6deg));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+}
+
+/* 槍：突き。細く鋭く前へ伸びる */
+.lane-unit[data-attack='thrust'].is-attacking .lane-unit-icon {
+  animation: atk-thrust 0.28s cubic-bezier(0.1, 1.8, 0.4, 1);
+}
+
+@keyframes atk-thrust {
+  0% {
+    transform: translateX(calc(var(--face) * -14px)) scale(0.86, 1.14);
+  }
+  30% {
+    transform: translateX(calc(var(--face) * 30px)) scale(1.34, 0.84);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* 魔法：詠唱。ふわりと浮いて光をためてから放つ */
+.lane-unit[data-attack='cast'].is-attacking .lane-unit-icon {
+  animation: atk-cast 0.5s ease-in-out;
+}
+
+@keyframes atk-cast {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+  40% {
+    transform: translateY(-16px) scale(1.1) rotate(calc(var(--face) * -6deg));
+    filter: brightness(1.5) drop-shadow(0 0 14px rgba(150, 200, 255, 0.95));
+  }
+  62% {
+    transform: translateY(-6px) scale(1.16) rotate(calc(var(--face) * 5deg));
+    filter: brightness(1.8) drop-shadow(0 0 18px rgba(190, 150, 255, 1));
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+}
+
+/* 爪：踏み込みざまに素早く2回ひっかく */
+.lane-unit[data-attack='claw'].is-attacking .lane-unit-icon {
+  animation: atk-claw-swipe 0.32s ease-out;
+}
+
+@keyframes atk-claw-swipe {
+  0% {
+    transform: translateX(calc(var(--face) * -10px)) rotate(calc(var(--face) * -14deg));
+  }
+  28% {
+    transform: translateX(calc(var(--face) * 20px)) rotate(calc(var(--face) * 16deg)) scale(1.12);
+  }
+  48% {
+    transform: translateX(calc(var(--face) * 6px)) rotate(calc(var(--face) * -12deg));
+  }
+  72% {
+    transform: translateX(calc(var(--face) * 16px)) rotate(calc(var(--face) * 12deg)) scale(1.08);
+  }
+  100% {
+    transform: translateX(0) rotate(0) scale(1);
+  }
+}
+
+/* 急襲：高く跳んで相手に飛びかかる */
+.lane-unit[data-attack='dive'].is-attacking .lane-unit-icon {
+  animation: atk-dive 0.4s ease-in-out;
+}
+
+@keyframes atk-dive {
+  0% {
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+  28% {
+    transform: translate(calc(var(--face) * -10px), -22px) rotate(calc(var(--face) * -16deg)) scale(0.94);
+  }
+  55% {
+    transform: translate(calc(var(--face) * 22px), 6px) rotate(calc(var(--face) * 20deg)) scale(1.18, 0.9);
+  }
+  75% {
+    transform: translate(calc(var(--face) * 8px), -3px) rotate(calc(var(--face) * 6deg));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0) scale(1);
+  }
+}
+
+/* 咆哮：王・守護者。ぐっと反ってから吠え、ぶるっと震える */
+.lane-unit[data-attack='roar'].is-attacking .lane-unit-icon {
+  animation: atk-roar 0.52s ease-out;
+}
+
+@keyframes atk-roar {
+  0% {
+    transform: translateX(calc(var(--face) * -8px)) scale(0.92, 1.1);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+  28% {
+    transform: translateX(calc(var(--face) * 10px)) scale(1.34, 1.18);
+    filter: brightness(1.45) drop-shadow(0 0 16px rgba(255, 180, 90, 0.95));
+  }
+  45% {
+    transform: translate(calc(var(--face) * 6px), -3px) scale(1.24, 1.12);
+  }
+  60% {
+    transform: translate(calc(var(--face) * 10px), 3px) scale(1.26, 1.1);
+  }
+  78% {
+    transform: translateX(calc(var(--face) * 4px)) scale(1.1, 1.04);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+}
+
+/* 雷撃：その場でビリビリ震えて放電する */
+.lane-unit[data-attack='zap'].is-attacking .lane-unit-icon {
+  animation: atk-zap 0.36s linear;
+}
+
+@keyframes atk-zap {
+  0% {
+    transform: translate(0, 0) scale(1);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+  12% {
+    transform: translate(-3px, 2px) scale(1.12);
+    filter: brightness(2.2) saturate(1.5) drop-shadow(0 0 12px rgba(150, 220, 255, 1));
+  }
+  26% {
+    transform: translate(4px, -2px) scale(1.08);
+    filter: brightness(1.3) drop-shadow(0 0 8px rgba(150, 220, 255, 0.8));
+  }
+  40% {
+    transform: translate(-3px, -1px) scale(1.14);
+    filter: brightness(2.4) saturate(1.6) drop-shadow(0 0 16px rgba(190, 240, 255, 1));
+  }
+  58% {
+    transform: translate(3px, 2px) scale(1.06);
+    filter: brightness(1.2) drop-shadow(0 0 6px rgba(150, 220, 255, 0.7));
+  }
+  76% {
+    transform: translate(-2px, 0) scale(1.02);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+}
+
+/* 号令：指揮官。ぐっと伸び上がって号令をかける */
+.lane-unit[data-attack='command'].is-attacking .lane-unit-icon {
+  animation: atk-command 0.44s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+@keyframes atk-command {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+  30% {
+    transform: translateY(-18px) scale(0.94, 1.16) rotate(calc(var(--face) * -8deg));
+    filter: brightness(1.4) drop-shadow(0 0 12px rgba(255, 228, 140, 0.95));
+  }
+  55% {
+    transform: translateY(2px) scale(1.16, 0.9) rotate(calc(var(--face) * 6deg));
+    filter: brightness(1.6) drop-shadow(0 0 16px rgba(255, 228, 140, 1));
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0);
+    filter: brightness(1) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+}
+
+/* ドリル：高速回転しながら相手へもみ込む */
+.lane-unit[data-attack='drill'].is-attacking .lane-unit-icon {
+  animation: atk-drill 0.42s linear;
+}
+
+@keyframes atk-drill {
+  0% {
+    transform: translateX(calc(var(--face) * -12px)) rotate(0) scale(0.92, 1.08);
+  }
+  30% {
+    transform: translateX(calc(var(--face) * 14px)) rotate(calc(var(--face) * 180deg)) scale(1.2, 0.86);
+  }
+  60% {
+    transform: translateX(calc(var(--face) * 24px)) rotate(calc(var(--face) * 360deg)) scale(1.1, 0.95);
+  }
+  80% {
+    transform: translateX(calc(var(--face) * 12px)) rotate(calc(var(--face) * 540deg));
+  }
+  100% {
+    transform: translateX(0) rotate(calc(var(--face) * 720deg)) scale(1);
   }
 }
 
@@ -2842,6 +3060,193 @@ img.icon-glyph {
   }
   100% {
     transform: translate(-50%, -50%) scale(1.5) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+/* 刀の斬撃：大きな弧 */
+.fx-slash {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 7px solid transparent;
+  border-top-color: #fff;
+  border-right-color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 0 6px rgba(190, 230, 255, 0.95));
+  animation: fx-slash 0.3s ease-out forwards;
+}
+
+@keyframes fx-slash {
+  0% {
+    transform: translate(-50%, -50%) rotate(calc(var(--fx-dir, 1) * -70deg)) scale(0.5);
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--fx-dir, 1) * 80deg)) scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* 槍の突き：鋭い直線 */
+.fx-thrust {
+  width: 74px;
+  height: 10px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, #fff 45%, #cfe9ff 70%, rgba(207, 233, 255, 0) 100%);
+  filter: drop-shadow(0 0 6px rgba(160, 215, 255, 0.95));
+  animation: fx-thrust 0.26s ease-out forwards;
+}
+
+@keyframes fx-thrust {
+  0% {
+    transform: translate(-50%, -50%) scaleX(calc(var(--fx-dir, 1) * 0.3));
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scaleX(calc(var(--fx-dir, 1) * 1.5));
+    opacity: 0;
+  }
+}
+
+/* 魔法の弾と着弾の魔法陣 */
+.fx-orb {
+  left: var(--fx-x0);
+  top: var(--fx-y0);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 30%, #c9a6ff 55%, rgba(170, 120, 255, 0) 80%);
+  box-shadow: 0 0 12px rgba(190, 150, 255, 0.95);
+  animation: fx-fly 0.3s linear forwards;
+}
+
+.fx-magic {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 4px solid rgba(214, 180, 255, 0.95);
+  box-shadow:
+    0 0 16px rgba(190, 150, 255, 0.9),
+    inset 0 0 18px rgba(255, 255, 255, 0.85);
+  animation: fx-magic 0.46s ease-out forwards;
+}
+
+.fx-magic::before {
+  inset: 14px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+}
+
+@keyframes fx-magic {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3) rotate(0);
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5) rotate(140deg);
+    opacity: 0;
+  }
+}
+
+/* 咆哮：広がる衝撃の輪 */
+.fx-roar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 6px solid rgba(255, 206, 120, 0.95);
+  box-shadow:
+    0 0 18px rgba(255, 170, 60, 0.9),
+    inset 0 0 14px rgba(255, 240, 200, 0.9);
+  animation: fx-roar 0.5s ease-out forwards;
+}
+
+.fx-roar::before {
+  inset: -18px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 220, 150, 0.75);
+}
+
+@keyframes fx-roar {
+  0% {
+    transform: translate(-50%, -50%) scale(0.25);
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* 雷：飛ぶ電撃と着弾の放電 */
+.fx-spark-shot {
+  left: var(--fx-x0);
+  top: var(--fx-y0);
+  width: 34px;
+  height: 6px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, #eaffff 40%, #6fd8ff 75%, rgba(111, 216, 255, 0) 100%);
+  box-shadow: 0 0 10px rgba(130, 225, 255, 1);
+  animation: fx-fly 0.2s linear forwards;
+}
+
+.fx-zap {
+  width: 56px;
+  height: 56px;
+  background: #eaffff;
+  clip-path: polygon(58% 0, 24% 52%, 46% 52%, 34% 100%, 78% 42%, 52% 42%, 72% 0);
+  filter: drop-shadow(0 0 10px rgba(110, 215, 255, 1)) drop-shadow(0 0 4px rgba(40, 140, 255, 0.9));
+  animation: fx-zap 0.3s steps(3, end) forwards;
+}
+
+@keyframes fx-zap {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7) rotate(-10deg);
+    opacity: 1;
+  }
+  55% {
+    transform: translate(-50%, -50%) scale(1.15) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3) rotate(-4deg);
+    opacity: 0;
+  }
+}
+
+/* ドリル：もみ込む渦 */
+.fx-drill {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(255, 236, 190, 0.95) 0 22deg,
+    rgba(190, 130, 60, 0.6) 22deg 44deg
+  );
+  -webkit-mask: radial-gradient(circle, #000 20%, rgba(0, 0, 0, 0.6) 55%, transparent 72%);
+  mask: radial-gradient(circle, #000 20%, rgba(0, 0, 0, 0.6) 55%, transparent 72%);
+  animation: fx-drill 0.38s linear forwards;
+}
+
+@keyframes fx-drill {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4) rotate(0);
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.35) rotate(400deg);
     opacity: 0;
   }
 }
