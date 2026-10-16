@@ -505,7 +505,7 @@ button {
   z-index: 20;
   text-align: center;
   margin: -24px -16px 18px;
-  padding: 16px 16px 14px;
+  padding: 10px 16px 10px;
   background: var(--color-bg);
   border-bottom: 1px solid rgba(251, 234, 210, 0.14);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
@@ -514,14 +514,138 @@ button {
 .screen-header h2 {
   font-family: var(--font-display);
   color: var(--color-accent);
-  font-size: 26px;
+  font-size: 22px;
   margin: 0;
 }
 
 .screen-sub {
   color: var(--color-panel-alt);
+  font-size: 12px;
+  margin: 3px 0 0;
+}
+
+/* せまい画面では固定エリアを小さく保つ。
+   下部タブで行き来する画面（ホーム・ガチャ・ステータス・対戦）は見出しだけで用が足りるので
+   説明文を隠す。操作の説明が要る画面（合体・編成など）の説明文は残す */
+@media (max-width: 640px) {
+  .screen[data-screen='home'] .screen-sub,
+  .screen[data-screen='gacha'] .screen-sub,
+  .screen[data-screen='roster-status'] .screen-sub,
+  .screen[data-screen='vs-select'] .screen-sub {
+    display: none;
+  }
+
+  .screen-header {
+    padding: 8px 16px;
+  }
+
+  .screen-header h2 {
+    font-size: 20px;
+  }
+
+  /* ガチャの種類タブが2行に折り返さないよう、せまい画面では小さくする */
+  .gacha-mode-tabs {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .gacha-mode-tab {
+    padding: 7px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+/* 固定ヘッダーの外に置く説明文 */
+.screen-note {
+  margin: 0 0 14px;
+  color: var(--color-panel-alt);
   font-size: 13px;
-  margin: 4px 0 0;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ヘッダー右上の小さなボタン（セーブデータ切り替えなど） */
+.screen-header-sub-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 999px;
+}
+
+.screen-header-sub-btn--wide {
+  font-size: 13px;
+  padding: 7px 14px;
+}
+
+/* ---------- 下部の固定タブバー ---------- */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  background: linear-gradient(180deg, rgba(37, 24, 16, 0.97), rgba(26, 17, 11, 0.99));
+  border-top: 1px solid rgba(251, 234, 210, 0.18);
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.45);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.tabbar[hidden] {
+  display: none;
+}
+
+.tabbar-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 7px 2px 6px;
+  min-height: 54px;
+  border: 0;
+  background: none;
+  color: var(--color-panel-alt);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.tabbar-icon {
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.tabbar-label {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tabbar-btn:hover {
+  color: var(--color-panel);
+  background: rgba(251, 234, 210, 0.06);
+}
+
+.tabbar-btn.is-active {
+  color: var(--color-accent);
+  background: rgba(227, 178, 60, 0.12);
+  box-shadow: inset 0 3px 0 var(--color-accent);
+}
+
+.tabbar-btn.is-active .tabbar-icon {
+  transform: scale(1.18) translateY(-1px);
+}
+
+/* タブバーに隠れないよう、画面の下に余白を足す */
+body.has-tabbar .screen.is-active {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
 }
 
 .screen-header-actions {

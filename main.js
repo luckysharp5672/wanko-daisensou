@@ -585,10 +585,29 @@ function displayName(def, level) {
   return `${def.name}${getFormSuffix(level)}`;
 }
 
+// 下部タブバーを出す画面と、その画面でどのタブを光らせるか
+const TAB_SCREENS = {
+  home: 'home',
+  gacha: 'gacha',
+  'roster-status': 'roster-status',
+  fusion: 'roster-status', // 合体はステータス管理から入るので、同じタブを光らせる
+  'vs-select': 'vs-select',
+};
+
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach((el) => {
     el.classList.toggle('is-active', el.dataset.screen === name);
   });
+  // バトル中や編成中などはタブバーを隠す（誤操作防止と画面の広さのため）
+  const tabbar = document.getElementById('tabbar');
+  const activeTab = TAB_SCREENS[name];
+  tabbar.hidden = !activeTab;
+  document.body.classList.toggle('has-tabbar', !!activeTab);
+  for (const btn of tabbar.querySelectorAll('.tabbar-btn')) {
+    const on = btn.dataset.tab === activeTab;
+    btn.classList.toggle('is-active', on);
+    btn.setAttribute('aria-current', on ? 'page' : 'false');
+  }
 }
 
 function formatTime(ms) {
@@ -1966,7 +1985,7 @@ function renderBattleFrame() {
 
   for (const info of rs.deployButtons) {
     if (info.layerLocked) continue;
-    const btn = document.querySelector(`.deploy-btn[data-def-id="${info.defId}"]`);
+    const btn = document.querySelector(`#deploy-row .deploy-btn[data-def-id="${info.defId}"]`);
     if (!btn) continue;
     const onCooldown = info.cooldownRemaining > 0;
     btn.disabled = onCooldown || !info.affordable;
@@ -1976,7 +1995,7 @@ function renderBattleFrame() {
   }
 
   for (const weapon of rs.castleWeapons) {
-    const btn = document.querySelector(`.deploy-btn--castle[data-weapon-id="${weapon.id}"]`);
+    const btn = document.querySelector(`#deploy-row .deploy-btn--castle[data-weapon-id="${weapon.id}"]`);
     if (!btn) continue;
     btn.disabled = weapon.deployed || !weapon.affordable;
     btn.classList.toggle('is-deployed', weapon.deployed);
@@ -2352,7 +2371,7 @@ function syncPvpUnitNode(unit, laneLength) {
 
 function updatePvpDeployButtons(side, deployButtons) {
   for (const info of deployButtons) {
-    const btn = document.querySelector(`.deploy-btn[data-pvp-side="${side}"][data-def-id="${info.defId}"]`);
+    const btn = document.querySelector(`#vs-${side}-deploy-row .deploy-btn[data-def-id="${info.defId}"]`);
     if (!btn) continue;
     const onCooldown = info.cooldownRemaining > 0;
     btn.disabled = onCooldown || !info.affordable;
@@ -2627,15 +2646,7 @@ app.addEventListener('click', (e) => {
     appState.pvpLoop.setSpeed(appState.pvpSpeed);
     target.textContent = `x${appState.pvpSpeed}`;
   } else if (action === 'go-gacha') {
-    appState.gachaMode = 'normal';
-    renderGacha();
-    showScreen('gacha');
-  } else if (action === 'go-halloween-gacha') {
-    appState.gachaMode = 'halloween';
-    renderGacha();
-    showScreen('gacha');
-  } else if (action === 'go-mecha-gacha') {
-    appState.gachaMode = 'mecha';
+    // ガチャの種類（通常／ハロウィン／メカ）はガチャ画面の中のタブで選ぶので、ここでは選択を保つ
     renderGacha();
     showScreen('gacha');
   } else if (action === 'switch-formation-pattern') {

@@ -101,16 +101,7 @@
         <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
         <div class="wallet-badge wallet-badge--ticket"><span aria-hidden="true">🎫</span> わんこチケット <span class="ticket-amount">0</span></div>
       </div>
-      <div class="screen-header-actions">
-        <button class="btn btn--ghost" data-action="go-title">タイトルへ戻る</button>
-        <button class="btn btn--ghost" data-action="go-profile">セーブデータを切り替える</button>
-        <button class="btn btn--ghost" data-action="go-vs-select">⚔️ 対戦モード</button>
-        <button class="btn btn--ghost" data-action="go-roster-status">📋 ステータス管理</button>
-        <button class="btn btn--ghost" data-action="go-fusion">🔀 合体</button>
-        <button class="btn btn--primary" data-action="go-gacha">🎰 ガチャを引く</button>
-        <button class="btn btn--primary btn--halloween" data-action="go-halloween-gacha">🎃 ハロウィンガチャ</button>
-        <button class="btn btn--primary btn--mecha" data-action="go-mecha-gacha">🤖 メカガチャ</button>
-      </div>
+      <button class="btn screen-header-sub-btn" data-action="go-profile" title="セーブデータ・タイトルへ">👤</button>
     </header>
     <div class="difficulty-panel">
       <h3 class="panel-title">難易度を選んでステージに挑戦しよう</h3>
@@ -133,12 +124,12 @@
   <section class="screen" data-screen="fusion">
     <header class="screen-header">
       <h2>合体</h2>
-      <p class="screen-sub">Lv10以上の2体を合体させて、ガチャでは出ない特別なキャラを生み出そう。素材の2体は手持ちからいなくなり、生まれたキャラはLv1から育て直しです</p>
       <div class="wallet-badge"><span aria-hidden="true">🪙</span> 所持わんコイン <span class="wallet-amount">0</span></div>
-      <div class="screen-header-actions">
-        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
-      </div>
+      <button class="btn screen-header-sub-btn screen-header-sub-btn--wide" data-action="go-roster-status">← 戻る</button>
     </header>
+
+    <!-- 長い説明は固定ヘッダーに置くと場所を取るので、スクロールする本文側に置く -->
+    <p class="screen-note">Lv10以上の2体を合体させて、ガチャでは出ない特別なキャラを生み出そう。素材の2体は手持ちからいなくなり、生まれたキャラはLv1から育て直しです</p>
 
     <div class="fusion-result" id="fusion-result" hidden></div>
     <div class="fusion-list" id="fusion-list"></div>
@@ -148,9 +139,7 @@
     <header class="screen-header">
       <h2>ステータス管理</h2>
       <p class="screen-sub">所持しているキャラクター一覧。カードをタップすると詳細を確認できます</p>
-      <div class="screen-header-actions">
-        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
-      </div>
+      <button class="btn btn--primary screen-header-sub-btn screen-header-sub-btn--wide" data-action="go-fusion">🔀 合体</button>
 
       <div class="roster-status-toolbar">
         <label class="roster-status-filter">
@@ -196,9 +185,6 @@
     <header class="screen-header">
       <h2>対戦モード</h2>
       <p class="screen-sub">セーブデータを2つ選んで、同じ端末で対戦しよう</p>
-      <div class="screen-header-actions">
-        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
-      </div>
     </header>
 
     <div class="vs-select-panel">
@@ -251,12 +237,9 @@
         <div class="wallet-badge wallet-badge--ticket"><span aria-hidden="true">🎫</span> わんこチケット <span class="ticket-amount">0</span></div>
       </div>
       <div class="gacha-mode-tabs">
-        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="normal">通常ガチャ</button>
-        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="halloween">🎃 ハロウィンガチャ</button>
-        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="mecha">🤖 メカガチャ</button>
-      </div>
-      <div class="screen-header-actions">
-        <button class="btn btn--ghost" data-action="go-home">ステージ選択へ戻る</button>
+        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="normal">通常</button>
+        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="halloween">🎃 ハロウィン</button>
+        <button class="btn gacha-mode-tab" type="button" data-action="set-gacha-mode" data-gacha-mode="mecha">🤖 メカ</button>
       </div>
     </header>
 
@@ -467,7 +450,22 @@
     </div>
   </section>
 
+  <nav class="tabbar" id="tabbar" hidden>
+    <button class="tabbar-btn" type="button" data-action="go-home" data-tab="home">
+      <span class="tabbar-icon" aria-hidden="true">🏯</span><span class="tabbar-label">ホーム</span>
+    </button>
+    <button class="tabbar-btn" type="button" data-action="go-gacha" data-tab="gacha">
+      <span class="tabbar-icon" aria-hidden="true">🎰</span><span class="tabbar-label">ガチャ</span>
+    </button>
+    <button class="tabbar-btn" type="button" data-action="go-roster-status" data-tab="roster-status">
+      <span class="tabbar-icon" aria-hidden="true">📋</span><span class="tabbar-label">ステータス</span>
+    </button>
+    <button class="tabbar-btn" type="button" data-action="go-vs-select" data-tab="vs-select">
+      <span class="tabbar-icon" aria-hidden="true">⚔️</span><span class="tabbar-label">対戦</span>
+    </button>
+  </nav>
 </div>
+
 <script type="module" src="main.js"></script>
 </body>
 </html>
