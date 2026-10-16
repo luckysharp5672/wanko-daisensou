@@ -28,6 +28,7 @@ import {
   getRadarStats,
 } from './game/units.js';
 import { createBattle, createPvpBattle } from './game/battle.js';
+import { hasSprites, getSpriteFrame, pickPose, preloadSprites, disableSprites } from './game/sprites.js';
 import { LAYER_IDS, LAYER_INFO } from './game/layers.js';
 import { DIFFICULTY_LEVELS, getDifficultySettings } from './game/difficulty.js';
 import {
@@ -104,6 +105,8 @@ const lastAttackFlash = new Map();
 const lastCastleFlash = new Map();
 const pvpLaneUnitNodes = new Map();
 const pvpLastAttackFlash = new Map();
+const lastHitSeen = new Map();
+const pvpLastHitSeen = new Map();
 
 // ---------- セーブデータ（複数プロフィール対応・localStorage永続化） ----------
 // 1台の端末を複数人で共有する想定のため、プロフィール（なまえ）ごとに進捗を分けて保存し、
@@ -1715,8 +1718,11 @@ function startBattle(stageId, difficulty = appState.selectedDifficulty) {
   document.getElementById('btn-speed').textContent = 'x1';
 
   document.getElementById('lane-units').innerHTML = '';
+  document.getElementById('lane-effects').innerHTML = '';
   laneUnitNodes.clear();
   lastAttackFlash.clear();
+  lastHitSeen.clear();
+  preloadSprites(appState.formation);
   lastCastleFlash.clear();
   document.getElementById('result-overlay').hidden = true;
   document.getElementById('result-overlay').className = 'battle-result-overlay';
@@ -1757,6 +1763,116 @@ function layerTopPercent(unit) {
   return (top + bottom) / 2;
 }
 
+// ---------- バトルのエフェクト（攻撃・被弾・撃破） ----------
+// エフェクトは % 座標で置く小さな要素で、CSS アニメーションが終わると自分で消える。
+const MAX_LANE_EFFECTS = 40;
+// 基本5キャラの攻撃エフェクト。melee は標的の位置に出す、projectile は標的まで飛ばして着弾で impact を出す
+const ATTACK_FX = {
+  wankou: { melee: 'fx-bash' },
+  shibaruru: { melee: 'fx-quake' },
+  terrials: { melee: 'fx-claw' },
+  basset: { projectile: 'fx-bolt', impact: 'fx-burst' },
+  dogimine: { projectile: 'fx-arrow', impact: 'fx-sparkle' },
+};
+
+function spawnLaneEffect(layerId, className, left, top, vars = {}) {
+  const layer = document.getElementById(layerId);
+  if (!layer || layer.childElementCount >= MAX_LANE_EFFECTS) return null;
+  const el = document.createElement('div');
+  el.className = `lane-fx ${className}`;
+  el.style.left = `${left}%`;
+  el.style.top = `${top}%`;
+  for (const [k, v] of Object.entries(vars)) el.style.setProperty(k, v);
+  el.addEventListener('animationend', (e) => {
+    if (e.target === el) el.remove();
+  });
+  layer.appendChild(el);
+  return el;
+}
+
+function nodePos(node) {
+  return { left: parseFloat(node.style.left) || 0, top: parseFloat(node.style.top) || 0 };
+}
+
+// xToPct: 内部座標 x を画面の % に変える関数（通常バトルと対戦で左右が逆）
+function emitAttackFx(unit, node, nodes, layerId, xToPct) {
+  const fx = ATTACK_FX[unit.defId];
+  if (!fx || unit.side === 'enemy') return;
+  const from = nodePos(node);
+  const targetNode = unit.lastTargetUid ? nodes.get(unit.lastTargetUid) : null;
+  const to = targetNode ? nodePos(targetNode) : { left: xToPct(unit.lastTargetX ?? unit.x), top: from.top };
+  const dir = to.left < from.left ? -1 : 1;
+  if (fx.melee) {
+    spawnLaneEffect(layerId, fx.melee, to.left, to.top, { '--fx-dir': dir });
+    return;
+  }
+  const shot = spawnLaneEffect(layerId, fx.projectile, from.left, from.top, {
+    '--fx-x0': `${from.left}%`,
+    '--fx-y0': `${from.top}%`,
+    '--fx-x1': `${to.left}%`,
+    '--fx-y1': `${to.top}%`,
+    '--fx-dir': dir,
+  });
+  if (shot) {
+    shot.addEventListener('animationend', () => spawnLaneEffect(layerId, fx.impact, to.left, to.top, { '--fx-dir': dir }), {
+      once: true,
+    });
+  }
+}
+
+function emitHitFx(unit, node, seen, layerId) {
+  if (!unit.lastHitAt || seen.get(unit.uid) === unit.lastHitAt) return;
+  seen.set(unit.uid, unit.lastHitAt);
+  const { left, top } = nodePos(node);
+  spawnLaneEffect(layerId, 'fx-hit', left, top);
+  // ダメージの数字（大きい一撃ほど大きく赤く出す）
+  const dmg = unit.lastDamage || 0;
+  if (dmg > 0) {
+    const big = dmg >= Math.max(60, unit.maxHp * 0.25);
+    const num = spawnLaneEffect(layerId, `fx-dmg${big ? ' is-big' : ''}`, left, top, {
+      '--fx-drift': `${(Math.random() * 2 - 1) * 14}px`,
+    });
+    if (num) num.textContent = dmg;
+  }
+  if (unit.lastHitByBoss) shakeLane(layerId);
+}
+
+// ボスの一撃で画面を揺らす
+function shakeLane(layerId) {
+  const lane = document.getElementById(layerId === 'lane-effects' ? 'battle-lane' : 'vs-battle-lane');
+  if (!lane || lane.classList.contains('is-shaking')) return;
+  lane.classList.add('is-shaking');
+  lane.addEventListener('animationend', () => lane.classList.remove('is-shaking'), { once: true });
+}
+
+// 撃破：煙を出し、やられた絵を回しながら吹き飛ばしてから消す
+function emitDefeatFx(node, layerId) {
+  const { left, top } = nodePos(node);
+  spawnLaneEffect(layerId, 'fx-poof', left, top);
+  node.classList.add('is-defeated');
+  node.addEventListener('animationend', () => node.remove(), { once: true });
+  setTimeout(() => node.remove(), 1200);
+}
+
+// ポーズ画像があるキャラは、状態に合わせて <img> の絵を差し替える（変わったときだけ書き換える）
+function syncSpriteFrame(unit, node, now) {
+  if (!hasSprites(unit.defId)) return;
+  node.classList.add('has-sprites');
+  const img = node.querySelector('img.icon-glyph');
+  const pose = pickPose(unit, now);
+  if (img && img.dataset.pose !== pose) {
+    if (!img.dataset.pose) {
+      img.addEventListener('error', () => {
+        disableSprites(unit.defId);
+        node.classList.remove('has-sprites');
+        img.src = getBattleImage(unit.defId);
+      }, { once: true });
+    }
+    img.dataset.pose = pose;
+    img.src = getSpriteFrame(unit.defId, pose);
+  }
+}
+
 function syncUnitNode(unit) {
   let node = laneUnitNodes.get(unit.uid);
   if (!node) {
@@ -1773,6 +1889,10 @@ function syncUnitNode(unit) {
       <div class="lane-unit-hp"><div class="lane-unit-hp-fill"></div></div>
       <div class="lane-unit-icon">${glyph}</div>
     `;
+    node.dataset.def = unit.defId;
+    node.dataset.layer = unit.layer || '';
+    // 相手に向かう向き（画面の左右）。動きの向きをそろえるのに使う
+    node.style.setProperty('--face', unit.side === 'ally' ? -1 : 1);
     document.getElementById('lane-units').appendChild(node);
     laneUnitNodes.set(unit.uid, node);
   }
@@ -1791,11 +1911,14 @@ function syncUnitNode(unit) {
   node.classList.toggle('is-attacking', now < unit.attackFlashUntil);
   node.classList.toggle('is-knockback', now < unit.knockbackUntil);
   node.classList.toggle('is-moving', !unit.engaged && now >= unit.attackFlashUntil);
+  if (unit.side === 'ally') syncSpriteFrame(unit, node, now);
   const fill = node.querySelector('.lane-unit-hp-fill');
   fill.style.width = `${Math.max(0, (unit.hp / unit.maxHp) * 100)}%`;
+  emitHitFx(unit, node, lastHitSeen, 'lane-effects');
 
   if (unit.attackFlashUntil > 0 && lastAttackFlash.get(unit.uid) !== unit.attackFlashUntil) {
     lastAttackFlash.set(unit.uid, unit.attackFlashUntil);
+    emitAttackFx(unit, node, laneUnitNodes, 'lane-effects', (x) => 100 - (x / laneLength) * 100);
     if (unit.boss) {
       playBoomSfx();
     } else {
@@ -1838,9 +1961,10 @@ function renderBattleFrame() {
   }
   for (const [uid, node] of laneUnitNodes) {
     if (!activeUids.has(uid)) {
-      node.remove();
+      emitDefeatFx(node, 'lane-effects');
       laneUnitNodes.delete(uid);
       lastAttackFlash.delete(uid);
+      lastHitSeen.delete(uid);
     }
   }
 
@@ -2162,8 +2286,11 @@ function startPvpBattle() {
   appState._pvpResultHandled = false;
 
   document.getElementById('vs-lane-units').innerHTML = '';
+  document.getElementById('vs-lane-effects').innerHTML = '';
   pvpLaneUnitNodes.clear();
   pvpLastAttackFlash.clear();
+  pvpLastHitSeen.clear();
+  preloadSprites([...p1.formation, ...p2.formation]);
   const overlay = document.getElementById('vs-result-overlay');
   overlay.hidden = true;
 
@@ -2200,6 +2327,9 @@ function syncPvpUnitNode(unit, laneLength) {
       <div class="lane-unit-hp"><div class="lane-unit-hp-fill"></div></div>
       <div class="lane-unit-icon"><img class="icon-glyph" src="${getBattleImage(unit.defId)}" alt=""></div>
     `;
+    node.dataset.def = unit.defId;
+    node.dataset.layer = unit.layer || '';
+    node.style.setProperty('--face', unit.owner === 'p1' ? 1 : -1);
     document.getElementById('vs-lane-units').appendChild(node);
     pvpLaneUnitNodes.set(unit.uid, node);
   }
@@ -2213,11 +2343,14 @@ function syncPvpUnitNode(unit, laneLength) {
   node.classList.toggle('is-attacking', now < unit.attackFlashUntil);
   node.classList.toggle('is-knockback', now < unit.knockbackUntil);
   node.classList.toggle('is-moving', !unit.engaged && now >= unit.attackFlashUntil);
+  syncSpriteFrame(unit, node, now);
   const fill = node.querySelector('.lane-unit-hp-fill');
   fill.style.width = `${Math.max(0, (unit.hp / unit.maxHp) * 100)}%`;
+  emitHitFx(unit, node, pvpLastHitSeen, 'vs-lane-effects');
 
   if (unit.attackFlashUntil > 0 && pvpLastAttackFlash.get(unit.uid) !== unit.attackFlashUntil) {
     pvpLastAttackFlash.set(unit.uid, unit.attackFlashUntil);
+    emitAttackFx(unit, node, pvpLaneUnitNodes, 'vs-lane-effects', (x) => (x / laneLength) * 100);
     playHitSfx();
   }
 }
@@ -2250,9 +2383,10 @@ function renderPvpBattleFrame() {
   }
   for (const [uid, node] of pvpLaneUnitNodes) {
     if (!activeUids.has(uid)) {
-      node.remove();
+      emitDefeatFx(node, 'vs-lane-effects');
       pvpLaneUnitNodes.delete(uid);
       pvpLastAttackFlash.delete(uid);
+      pvpLastHitSeen.delete(uid);
     }
   }
 

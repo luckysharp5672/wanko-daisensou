@@ -65,6 +65,12 @@ function stepUnits(state, units, opponents, dt, sign, hpKey, onOpponentKilled) {
         target.hp -= dmg;
         u.nextAttackAt = state.time + u.atkInterval;
         u.attackFlashUntil = state.time + 200;
+        // 以下は描画（攻撃・被弾エフェクト）用の記録で、戦闘の計算には使わない
+        u.lastTargetUid = target.uid;
+        u.lastTargetX = target.x;
+        target.lastHitAt = state.time;
+        target.lastDamage = dmg;
+        target.lastHitByBoss = !!u.boss;
 
         if (target.hp <= 0) {
           target.hp = 0;
@@ -86,6 +92,8 @@ function stepUnits(state, units, opponents, dt, sign, hpKey, onOpponentKilled) {
         state[hpKey] = Math.max(0, state[hpKey] - u.atk);
         u.nextAttackAt = state.time + u.atkInterval;
         u.attackFlashUntil = state.time + 200;
+        u.lastTargetUid = null;
+        u.lastTargetX = sign > 0 ? laneLength : 0;
       }
       continue;
     }
