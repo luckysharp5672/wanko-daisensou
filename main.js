@@ -770,6 +770,8 @@ function renderHome() {
     card.className = 'stage-card' + (unlocked ? '' : ' is-locked') + (cleared ? ' is-cleared' : '');
     card.type = 'button';
     card.disabled = !unlocked;
+    // 戦闘背景があるステージは、カードにも同じ背景をごく薄く敷く（CSS側でほぼ不透明な色を重ねて薄める）
+    if (stage.bgImage) card.style.setProperty('--stage-bg-photo', `url('${stage.bgImage}')`);
     card.innerHTML = `
       <div class="stage-card-name">${stage.name}
         ${stage.event ? '<span class="badge badge--event">🎃 EVENT</span>' : stage.extra ? '<span class="badge badge--extra">EXTRA</span>' : stage.boss ? '<span class="badge badge--boss">BOSS</span>' : ''}
