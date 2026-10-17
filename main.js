@@ -441,7 +441,7 @@ function importSaveCode(code) {
     alert('コードの形式が正しくありません。コピーし直すか、ファイルを選び直してもう一度お試しください。');
     return;
   }
-  const name = `${payload.name || 'ひきつぎ'}(引き継ぎ)`;
+  const name = payload.name || 'ひきつぎ';
   const id = makeProfileId();
   const now = Date.now();
   const profiles = listProfiles();
