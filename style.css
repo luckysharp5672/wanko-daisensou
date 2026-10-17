@@ -2353,7 +2353,7 @@ body.has-tabbar .screen.is-active {
 }
 
 .lane-unit-icon {
-  font-size: 44px;
+  font-size: 66px;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
 }
 
@@ -2362,19 +2362,19 @@ body.has-tabbar .screen.is-active {
 }
 
 img.icon-glyph {
-  width: 68px;
-  height: 68px;
+  width: 102px;
+  height: 102px;
   object-fit: contain;
 }
 
 .lane-unit.is-boss .lane-unit-icon {
-  font-size: 68px;
+  font-size: 102px;
 }
 
 /* 画像で表示するボス（ハロウィンイベント）は通常キャラの1.5倍 */
 .lane-unit.is-boss img.icon-glyph {
-  width: 102px;
-  height: 102px;
+  width: 153px;
+  height: 153px;
 }
 
 .icon-glyph.is-mirrored {
@@ -2386,13 +2386,13 @@ img.icon-glyph {
 }
 
 .lane-unit.is-boss.is-multilayer .lane-unit-icon {
-  font-size: 110px;
+  font-size: 165px;
   filter: drop-shadow(0 0 10px rgba(122, 35, 49, 0.7)) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5));
 }
 
 .lane-unit.is-boss.is-multilayer .lane-unit-hp {
-  width: 80px;
-  height: 6px;
+  width: 120px;
+  height: 9px;
 }
 
 .lane-unit.is-form1 .icon-glyph {
@@ -3868,16 +3868,16 @@ img.icon-glyph {
   }
 
   .lane-unit-icon {
-    font-size: 36px;
+    font-size: 54px;
   }
 
   img.icon-glyph {
-    width: 50px;
-    height: 50px;
+    width: 75px;
+    height: 75px;
   }
 
   .lane-unit.is-boss img.icon-glyph {
-    width: 75px;
-    height: 75px;
+    width: 113px;
+    height: 113px;
   }
 }
