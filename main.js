@@ -41,6 +41,7 @@ import {
   isMuted,
   playHitSfx,
   playBoomSfx,
+  playAttackSfx,
   playResultSfx,
 } from './game/audio.js';
 
@@ -1936,6 +1937,8 @@ function syncUnitNode(unit) {
     emitAttackFx(unit, node, laneUnitNodes, 'lane-effects', (x) => 100 - (x / laneLength) * 100);
     if (unit.boss) {
       playBoomSfx();
+    } else if (unit.side === 'ally') {
+      playAttackSfx(attackStyleOf(unit.defId));
     } else {
       playHitSfx();
     }
@@ -2367,7 +2370,7 @@ function syncPvpUnitNode(unit, laneLength) {
   if (unit.attackFlashUntil > 0 && pvpLastAttackFlash.get(unit.uid) !== unit.attackFlashUntil) {
     pvpLastAttackFlash.set(unit.uid, unit.attackFlashUntil);
     emitAttackFx(unit, node, pvpLaneUnitNodes, 'vs-lane-effects', (x) => (x / laneLength) * 100);
-    playHitSfx();
+    playAttackSfx(attackStyleOf(unit.defId));
   }
 }
 

@@ -263,6 +263,129 @@ export function playHitSfx() {
   osc.stop(t + 0.09);
 }
 
+// ---------- 攻撃の種類ごとの当たり音（motion.js の動きの種類と対応） ----------
+// 音はすべて Web Audio API で合成する（外部ファイルは使わない）。
+function sfxTone(startTime, freqFrom, freqTo, duration, wave, peakGain, detuneHz = 0) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = wave;
+  osc.frequency.setValueAtTime(freqFrom + detuneHz, startTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqTo), startTime + duration);
+  gain.gain.setValueAtTime(peakGain, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.02);
+}
+
+function sfxNoise(startTime, duration, filterType, freqFrom, freqTo, peakGain) {
+  const src = audioCtx.createBufferSource();
+  src.buffer = createNoiseBuffer(duration);
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = filterType;
+  filter.frequency.setValueAtTime(freqFrom, startTime);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(40, freqTo), startTime + duration);
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(peakGain, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+  src.start(startTime);
+}
+
+const ATTACK_SFX = {
+  // 体当たり：ドンッと重い衝突音
+  bash(t) {
+    sfxTone(t, 180, 55, 0.18, 'sine', 0.28);
+    sfxNoise(t, 0.05, 'lowpass', 1400, 300, 0.18);
+  },
+  // 踏みつけ：地面を揺らす低いズシーン
+  stomp(t) {
+    sfxTone(t, 90, 32, 0.4, 'sine', 0.3);
+    sfxNoise(t, 0.35, 'lowpass', 500, 90, 0.2);
+  },
+  // 回転斬り：シュパッと空を切る高い風切り音
+  spin(t) {
+    sfxNoise(t, 0.2, 'bandpass', 600, 3200, 0.16);
+    sfxTone(t + 0.12, 1400, 700, 0.1, 'triangle', 0.05);
+  },
+  // 反動：ドンと低い砲声
+  recoil(t) {
+    sfxTone(t, 260, 70, 0.22, 'square', 0.1);
+    sfxNoise(t, 0.16, 'lowpass', 900, 120, 0.25);
+  },
+  // 弓：ビンッと弦が鳴る
+  draw(t) {
+    sfxTone(t, 520, 260, 0.16, 'triangle', 0.18);
+    sfxTone(t + 0.02, 1800, 1200, 0.06, 'sine', 0.05);
+  },
+  // 刀：シャッと抜いて、キンと響く
+  slash(t) {
+    sfxNoise(t, 0.12, 'highpass', 2500, 5000, 0.14);
+    sfxTone(t + 0.06, 2600, 2100, 0.22, 'sine', 0.08);
+  },
+  // 突き：シュッと鋭く一直線
+  thrust(t) {
+    sfxNoise(t, 0.09, 'bandpass', 3000, 900, 0.18);
+    sfxTone(t + 0.04, 1200, 600, 0.09, 'sawtooth', 0.05);
+  },
+  // 魔法：キラキラと上がる詠唱音
+  cast(t) {
+    sfxTone(t, 400, 1200, 0.32, 'sine', 0.12);
+    sfxTone(t + 0.05, 800, 1600, 0.3, 'triangle', 0.06, 6);
+    sfxTone(t + 0.22, 1500, 2100, 0.14, 'sine', 0.05);
+  },
+  // 爪：ザッザッと3連のひっかき
+  claw(t) {
+    for (let i = 0; i < 3; i++) {
+      sfxNoise(t + i * 0.05, 0.05, 'bandpass', 2200, 1100, 0.2);
+    }
+  },
+  // 急襲：ヒュルルと落ちてから、ドスッと着地
+  dive(t) {
+    sfxNoise(t, 0.22, 'bandpass', 2400, 400, 0.14);
+    sfxTone(t + 0.2, 160, 60, 0.14, 'sine', 0.2);
+  },
+  // 咆哮：グオオと唸る低い声
+  roar(t) {
+    sfxTone(t, 170, 110, 0.45, 'sawtooth', 0.09, 4);
+    sfxNoise(t, 0.4, 'lowpass', 700, 200, 0.14);
+  },
+  // 雷撃：バチバチと弾ける放電
+  zap(t) {
+    for (let i = 0; i < 5; i++) {
+      sfxTone(t + i * 0.045, 1800 + (i % 2) * 600, 500, 0.04, 'square', 0.05);
+    }
+    sfxNoise(t, 0.2, 'highpass', 3000, 6000, 0.12);
+  },
+  // 号令：ピロリンと2音で気合を入れる
+  command(t) {
+    sfxTone(t, 660, 660, 0.12, 'triangle', 0.12);
+    sfxTone(t + 0.1, 990, 990, 0.2, 'triangle', 0.12);
+  },
+  // ドリル：ギュィーンと唸りながら削る
+  drill(t) {
+    sfxTone(t, 130, 110, 0.32, 'sawtooth', 0.07);
+    sfxNoise(t, 0.3, 'bandpass', 1600, 900, 0.14);
+  },
+};
+
+// 攻撃の種類（motion.js の attackStyleOf）に応じた当たり音。未知の種類は通常の「ビシッ」音
+export function playAttackSfx(style) {
+  ensureContext();
+  const t = audioCtx.currentTime;
+  if (t - lastHitSfxTime < HIT_SFX_MIN_GAP) return;
+  lastHitSfxTime = t;
+  const play = ATTACK_SFX[style];
+  if (play) {
+    play(t);
+  } else {
+    playHitSfx();
+  }
+}
+
 // 「ドカーン」: ボス級の重い一撃音
 export function playBoomSfx() {
   ensureContext();
