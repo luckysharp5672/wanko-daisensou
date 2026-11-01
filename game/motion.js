@@ -83,6 +83,27 @@ const ROLE_STYLE = {
   最終決戦兵器: 'command',
   // ドリルで突進
   掘削重戦車: 'drill',
+  // クリスマスガチャ限定キャラ
+  "聖夜の見習い": "bash",
+  "雪原の戦士": "stomp",
+  "ジンジャー剣士": "bash",
+  "鈴の制服隊": "command",
+  "もみの木の精": "spin",
+  "箱の番人": "draw",
+  "飴杖の剣士": "slash",
+  "雪兎の槍使い": "thrust",
+  "聖夜の突進": "dive",
+  "鈴の精霊": "cast",
+  "飾り玉の騎士": "spin",
+  "柊の大剣士": "slash",
+  "氷の狙撃手": "zap",
+  "空飛ぶ大砲": "recoil",
+  "ツリーの守り手": "stomp",
+  "聖歌隊長": "command",
+  "極光の槍使い": "thrust",
+  "聖夜の大将": "roar",
+  "雪嵐の女王": "zap",
+  "星の巨人": "stomp",
 };
 
 const DEFAULT_STYLE = 'bash';

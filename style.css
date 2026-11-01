@@ -114,6 +114,12 @@ button {
   box-shadow: 0 4px 0 #7a2f00, 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
+.btn--christmas {
+  background: linear-gradient(180deg, #d9413a 0%, #7d1a16 100%);
+  color: #fff8ec;
+  box-shadow: 0 4px 0 #4a0d0a, 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
 .btn--mecha {
   background: linear-gradient(180deg, #8fb4cc 0%, #4f6f86 100%);
   color: #f2f8fc;
@@ -1801,6 +1807,25 @@ body.has-tabbar .screen.is-active {
   border-color: var(--color-pumpkin-bright);
   background: rgba(200, 98, 31, 0.22);
   color: var(--color-pumpkin-bright);
+}
+
+.screen[data-screen='gacha'].is-christmas-mode {
+  background: radial-gradient(circle at 50% 0%, rgba(217, 65, 58, 0.18) 0%, transparent 65%);
+}
+
+.screen[data-screen='gacha'].is-christmas-mode #gacha-screen-title {
+  color: #ff8a80;
+}
+
+.screen[data-screen='gacha'].is-christmas-mode .gacha-mode-tab[data-gacha-mode='christmas'].is-selected {
+  border-color: #ff8a80;
+  background: rgba(217, 65, 58, 0.22);
+  color: #ff8a80;
+}
+
+.screen[data-screen='gacha'].is-christmas-mode #btn-gacha-pull {
+  background: linear-gradient(180deg, #d9413a 0%, #7d1a16 100%);
+  box-shadow: 0 4px 0 #4a0d0a, 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
 .screen[data-screen='gacha'].is-mecha-mode {

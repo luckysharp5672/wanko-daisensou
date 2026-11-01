@@ -5,6 +5,7 @@ import {
   GACHA_POOL,
   HALLOWEEN_GACHA_POOL,
   MECHA_GACHA_POOL,
+  CHRISTMAS_GACHA_POOL,
   rollGacha,
   gachaRateTable,
   FUSION_RECIPES,
@@ -841,6 +842,7 @@ function renderStageEnemies(stage) {
 function activeGachaPool() {
   if (appState.gachaMode === 'halloween') return HALLOWEEN_GACHA_POOL;
   if (appState.gachaMode === 'mecha') return MECHA_GACHA_POOL;
+  if (appState.gachaMode === 'christmas') return CHRISTMAS_GACHA_POOL;
   return GACHA_POOL;
 }
 
@@ -918,6 +920,7 @@ function renderGacha() {
     normal: ['わんこガチャ', 'わんこチケットを1枚消費して、新しい仲間を迎え入れよう'],
     halloween: ['🎃 ハロウィンガチャ', 'わんこチケットを1枚消費して、ハロウィン限定キャラの出現率アップ！'],
     mecha: ['🤖 メカガチャ', 'わんこチケットを1枚消費して、メカ化したキャラだけが出るガチャを引こう'],
+    christmas: ['🎄 クリスマスガチャ', 'わんこチケットを1枚消費して、クリスマス限定キャラが出るガチャを引こう'],
   };
   const [title, sub] = GACHA_TEXT[appState.gachaMode] || GACHA_TEXT.normal;
   document.getElementById('gacha-screen-title').textContent = title;
@@ -925,6 +928,7 @@ function renderGacha() {
   const gachaScreen = document.querySelector('[data-screen="gacha"]');
   gachaScreen.classList.toggle('is-halloween-mode', appState.gachaMode === 'halloween');
   gachaScreen.classList.toggle('is-mecha-mode', appState.gachaMode === 'mecha');
+  gachaScreen.classList.toggle('is-christmas-mode', appState.gachaMode === 'christmas');
   document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
     tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
   });
