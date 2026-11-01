@@ -1773,6 +1773,10 @@ body.has-tabbar .screen.is-active {
 
 /* ---------- ガチャ ---------- */
 
+.gacha-mode-tab[hidden] {
+  display: none;
+}
+
 .gacha-mode-tabs {
   display: flex;
   justify-content: center;

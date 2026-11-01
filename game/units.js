@@ -2843,7 +2843,16 @@ export const GACHA_POOL = [
   { defId: 'legend-fox-claw' },
   { defId: 'cosmos-goddess' },
   { defId: 'elemental-husky-god' },
-  // ハロウィン限定・伝説レア（10種）
+  { defId: 'antler-sniper' },
+  { defId: 'cyber-fox' },
+  { defId: 'karakuri-cat' },
+  { defId: 'sonic-wolf' },
+  { defId: 'thunder-fox' },
+];
+
+// ハロウィンガチャ用プール：通常ガチャと同じ顔ぶれ（ハロウィン伝説レアの排出率だけ高い。GACHA_RATES 参照）
+// ハロウィンガチャ用プール（ハロウィン限定キャラ）。現在はガチャ画面から外している。来年の復活用にデータとして残す
+export const HALLOWEEN_GACHA_POOL = [
   { defId: 'halloween-greatdane-emperor' },
   { defId: 'halloween-mastiff-titan' },
   { defId: 'halloween-bordercollie-strategist' },
@@ -2854,17 +2863,11 @@ export const GACHA_POOL = [
   { defId: 'halloween-kamaitachi-spear' },
   { defId: 'halloween-kitsune-nezumi-duo' },
   { defId: 'halloween-pegasus-hybrid' },
-  { defId: 'antler-sniper' },
-  { defId: 'cyber-fox' },
-  { defId: 'karakuri-cat' },
-  { defId: 'sonic-wolf' },
-  { defId: 'thunder-fox' },
   { defId: 'halloween-nine-tail-lady' },
   { defId: 'halloween-ghost-hound' },
 ];
-
-// ハロウィンガチャ用プール：通常ガチャと同じ顔ぶれ（ハロウィン伝説レアの排出率だけ高い。GACHA_RATES 参照）
-export const HALLOWEEN_GACHA_POOL = GACHA_POOL;
+// ハロウィンガチャを画面に出して引けるようにするフラグ（来年復活させる時は true にする）
+export const HALLOWEEN_GACHA_OPEN = false;
 
 // メカガチャ用プール：メカキャラだけが出る（メカキャラは通常ガチャ・ハロウィンガチャには出ない）
 export const MECHA_GACHA_POOL = [
@@ -2946,7 +2949,7 @@ export const GACHA_CATEGORY_LABELS = {
 };
 
 export const GACHA_RATES = {
-  normal: { rare: 60, EX: 20, superrare: 10, legend: 6, halloween: 4 },
+  normal: { rare: 60, EX: 20, superrare: 10, legend: 10 },
   halloween: { rare: 60, EX: 20, superrare: 10, legend: 6, halloween: 4 },
   mecha: { rare: 60, EX: 20, superrare: 12, legend: 8 },
   christmas: { rare: 60, EX: 20, superrare: 12, legend: 8 },

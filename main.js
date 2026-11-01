@@ -4,6 +4,7 @@ import {
   UNIT_DEFS,
   GACHA_POOL,
   HALLOWEEN_GACHA_POOL,
+  HALLOWEEN_GACHA_OPEN,
   MECHA_GACHA_POOL,
   CHRISTMAS_GACHA_POOL,
   rollGacha,
@@ -930,6 +931,7 @@ function renderGacha() {
   gachaScreen.classList.toggle('is-mecha-mode', appState.gachaMode === 'mecha');
   gachaScreen.classList.toggle('is-christmas-mode', appState.gachaMode === 'christmas');
   document.querySelectorAll('.gacha-mode-tab').forEach((tab) => {
+    tab.hidden = tab.dataset.gachaMode === 'halloween' && !HALLOWEEN_GACHA_OPEN;
     tab.classList.toggle('is-selected', tab.dataset.gachaMode === appState.gachaMode);
   });
 
@@ -2663,6 +2665,7 @@ app.addEventListener('click', (e) => {
   } else if (action === 'switch-vs-formation-pattern') {
     loadVsFormationPattern(target.dataset.pvpSide, Number(target.dataset.patternIndex));
   } else if (action === 'set-gacha-mode') {
+    if (target.dataset.gachaMode === 'halloween' && !HALLOWEEN_GACHA_OPEN) return;
     appState.gachaMode = target.dataset.gachaMode;
     renderGacha();
   } else if (action === 'gacha-pull') {
